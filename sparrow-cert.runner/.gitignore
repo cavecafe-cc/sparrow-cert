@@ -1,0 +1,8 @@
+*.b64
+*.b64.json
+/*_challenges.json
+/*.pfx
+/*.pem
+cert.json
+cert.staging.json
+/k8s/

@@ -1,0 +1,11 @@
+cert.json
+cert.staging.json
+bin/
+obj/
+node_modules/
+SparrowCert_*.json
+*.pem
+*.pfx
+*.b64
+*.b64.json
+*.DotSettings.user
