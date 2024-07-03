@@ -14,14 +14,14 @@ public class BuilderArgs(string domain, int httpPort, int httpsPort) {
    public int HttpsPort { get; } = httpsPort;
 }
 
-public class SparrowCertStartup {
+public class SparrowCert {
    private static CertJsonConfiguration CertJson { get; set; }
 
    public static BuilderArgs SetConfiguration(CertJsonConfiguration cfg) {
       CertJson = cfg;
       return new BuilderArgs(cfg.Domains.First(), cfg.HttpPort, cfg.HttpsPort);
    }
-   public void ConfigureServices(IServiceCollection services) {
+   public virtual void ConfigureServices(IServiceCollection services) {
       if (CertJson == null) {
          throw new InvalidDataException("no configuration found");
       }
@@ -38,11 +38,10 @@ public class SparrowCertStartup {
       services.AddSparrowCertFileChallengeStore(CertJson.UseStaging, basePath:CertJson.StorePath, CertJson.CertFriendlyName);
       services.AddSparrowCertRenewalHook(CertJson.Notify, CertJson.Domains);
    }
-   public void Configure(IApplicationBuilder app) {
+   public virtual void Configure(IApplicationBuilder app) {
       app.UseSparrowCert();
       app.Run(async (context) => {
          await context.Response.WriteAsync($"{nameof(Runner)} is running!");
       });
    }
-
 }

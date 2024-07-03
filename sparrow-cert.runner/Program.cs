@@ -30,7 +30,7 @@ public abstract class Program {
          Console.WriteLine($"invalid configuration file (no domains) in {configPath}"); 
          return;
       }
-      var buildArgs = SparrowCertStartup.SetConfiguration(config);
+      var buildArgs = SparrowCert.SetConfiguration(config);
       CreateWebHostBuilder(buildArgs).Build().Run();
    }
    
@@ -49,7 +49,7 @@ public abstract class Program {
                listenOptions.UseHttps(CertUtil.GenerateSelfSignedCertificate(args.Domain));
             });
          })
-         .UseStartup<SparrowCertStartup>();
+         .UseStartup<SparrowCert>();
 
    private static void ShowUsage(string msg = "") {
       // to get running assembly name

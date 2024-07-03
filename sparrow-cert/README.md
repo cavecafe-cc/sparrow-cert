@@ -98,7 +98,7 @@ public static void Main(string[] args) {
   // Load the configuration from the 'cert.json' file      
   var configPath = "<path to your 'cert.json' file>";
   var config = CertJsonConfiguration.FromFile(configPath);
-  var buildArgs = SparrowCertStartup.SetConfiguration(config);
+  var buildArgs = SparrowCert.SetConfiguration(config);
    
    
   CreateWebHostBuilder(buildArgs).Build().Run();
@@ -118,7 +118,7 @@ private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
         
         
    })
-   .UseStartup<SparrowCertStartup>();
+   .UseStartup<SparrowCert>();  // Or add your Startup from inherited SparrowCert
 
 
 ```

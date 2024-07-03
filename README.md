@@ -87,7 +87,7 @@ The service is configured through a `cert.json` file. Here is an example configu
 ```
 
 
-## Integration to your service
+## How to integrate into your project
 
 ```csharp
 
@@ -98,7 +98,7 @@ public static void Main(string[] args) {
   // Load the configuration from the 'cert.json' file      
   var configPath = "<path to your 'cert.json' file>";
   var config = CertJsonConfiguration.FromFile(configPath);
-  var buildArgs = SparrowCertStartup.SetConfiguration(config);
+  var buildArgs = SparrowCert.SetConfiguration(config);
    
    
   CreateWebHostBuilder(buildArgs).Build().Run();
@@ -118,7 +118,7 @@ private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
         
         
    })
-   .UseStartup<SparrowCertStartup>();
+   .UseStartup<SparrowCert>(); // Or add your Startup from inherited SparrowCert
 
 
 ```
