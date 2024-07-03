@@ -2,7 +2,9 @@
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SparrowCert.Certes;
 using SparrowCert.Certificates;
@@ -30,7 +32,7 @@ public abstract class Program {
          Console.WriteLine($"invalid configuration file (no domains) in {configPath}"); 
          return;
       }
-      var buildArgs = SparrowCert.SetConfiguration(config);
+      var buildArgs = SparrowCertStartup.SetConfiguration(config);
       CreateWebHostBuilder(buildArgs).Build().Run();
    }
    
@@ -49,7 +51,7 @@ public abstract class Program {
                listenOptions.UseHttps(CertUtil.GenerateSelfSignedCertificate(args.Domain));
             });
          })
-         .UseStartup<SparrowCert>();
+         .UseStartup<Startup>();
 
    private static void ShowUsage(string msg = "") {
       // to get running assembly name
@@ -58,5 +60,19 @@ public abstract class Program {
       if (msg.Length <= 0) return;
       Console.WriteLine();
       Console.WriteLine($"msg:'{msg}'");
+   }
+}
+
+public class Startup : SparrowCertStartup {
+   public override void ConfigureServices(IServiceCollection services) {
+      base.ConfigureServices(services);
+      
+      // add your own service configuration here
+   }
+
+   public override void Configure(IApplicationBuilder app) {
+      base.Configure(app);
+      
+      // add your own configuration here
    }
 }

@@ -29,4 +29,15 @@
     <ProjectReference Include="..\sparrow-cert\sparrow-cert.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="cert.json" />
+    <None Include="cert.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <Content Remove="cert.staging.json" />
+    <None Include="cert.staging.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

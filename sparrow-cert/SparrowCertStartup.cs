@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using SparrowCert.Certes;
 
-namespace SparrowCert.Runner;
+namespace SparrowCert;
 
 public class BuilderArgs(string domain, int httpPort, int httpsPort) {
    public string Domain { get; } = domain;
@@ -14,7 +14,7 @@ public class BuilderArgs(string domain, int httpPort, int httpsPort) {
    public int HttpsPort { get; } = httpsPort;
 }
 
-public class SparrowCert {
+public class SparrowCertStartup {
    private static CertJsonConfiguration CertJson { get; set; }
 
    public static BuilderArgs SetConfiguration(CertJsonConfiguration cfg) {
@@ -41,7 +41,7 @@ public class SparrowCert {
    public virtual void Configure(IApplicationBuilder app) {
       app.UseSparrowCert();
       app.Run(async (context) => {
-         await context.Response.WriteAsync($"{nameof(Runner)} is running!");
+         await context.Response.WriteAsync($"{nameof(SparrowCertStartup)} is started");
       });
    }
 }
