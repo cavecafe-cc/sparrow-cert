@@ -21,7 +21,7 @@ SparrowCert is a simple certificate renewal library for Kestrel-based services. 
 - Docker (optional, for deployment)
 - Kubernetes (optional, for deployment)
 
-## How to run it
+## How to test it
 
 1. Clone the repository (or get it from NuGet.org)
 2. Navigate to the project 'SparrowCert.Runner' directory
@@ -87,7 +87,7 @@ The service is configured through a `cert.json` file. Here is an example configu
 ```
 
 
-## Integration to your service
+## How to integrate into your project
 
 ```csharp
 
@@ -118,7 +118,7 @@ private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
         
         
    })
-   .UseStartup<SparrowCert>();  // Or add your Startup from inherited SparrowCert
+   .UseStartup<SparrowCert>();  // Or, add your Startup inherited from SparrowCert
 
 
 ```
