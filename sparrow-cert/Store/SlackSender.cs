@@ -32,10 +32,10 @@ public class SlackFile {
 }
 
 
-public class SlackSender(Slack cfg, string domain) : INotify {
+public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify {
    
    private string _domain { get; } = domain;
-   private Slack _slack { get; } = cfg;
+   private NotifyConfig.SlackConfig _slack { get; } = cfg;
    
    public async Task<bool> Notify(CertType type, byte[] data) {
       try {

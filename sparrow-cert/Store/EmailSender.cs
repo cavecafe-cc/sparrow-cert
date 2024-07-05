@@ -9,7 +9,7 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert.Store;
 
-public class EmailSender(Email email, string domain) : INotify {
+public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotify {
    public void Dispose() {
       email = null;
    }

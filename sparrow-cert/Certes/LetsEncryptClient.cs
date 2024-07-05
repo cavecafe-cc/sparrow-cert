@@ -67,7 +67,17 @@ public class LetsEncryptClient(IAcmeContext acme, CertJsonConfiguration options,
       logger.LogInformation("Acquiring certificate through signing request.");
 
       var keyPair = KeyFactory.NewKey(options.KeyAlgorithm);
-      var certificateChain = await order.Generate(options.CertSigningRequest, keyPair);
+      var req = options.CertSigningRequest;
+      var csrInfo = new CsrInfo {
+         CountryName = req.CountryName,
+         State = req.State,
+         Locality = req.Locality,
+         Organization = req.Organization,
+         OrganizationUnit = req.OrganizationUnit,
+         CommonName = req.CommonName
+      };
+      
+      var certificateChain = await order.Generate(csrInfo, keyPair);
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;
       var pfxBytes = pfxBuilder.Build(CertFriendlyName, options.CertPwd);

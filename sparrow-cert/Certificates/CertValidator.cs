@@ -19,12 +19,10 @@ public class CertValidator(
 
          var now = DateTime.Now;
          logger.LogTrace($"Validating cert UntilExpiry {options.RenewBeforeExpiry}, AfterIssue {options.RenewAfterIssued} - {cert}");
-         if (options.RenewBeforeExpiry != null && 
-             cert.NotAfter - now < options.RenewBeforeExpiry)
+         if (cert.NotAfter - now < options.RenewBeforeExpiry)
             return false;
 
-         if (options.RenewAfterIssued != null && 
-             now - cert.NotBefore > options.RenewAfterIssued)
+         if (now - cert.NotBefore > options.RenewAfterIssued)
             return false;
 
          return cert.NotBefore <= now && cert.NotAfter >= now;

@@ -26,12 +26,6 @@ public class RenewalService(
    public Uri LetsEncryptUri => config.LetsEncryptUri;
 
    public async Task StartAsync(CancellationToken cancelToken) {
-      if (config.RenewBeforeExpiry == null && config.RenewBeforeExpiry == null) {
-         throw new InvalidOperationException(
-            "Neither RenewBeforeExpiry nor RenewBeforeExpiry have been set," +
-            " which means that the LetsEncrypt certificate will never renew.");
-      }
-
       logger.LogTrace("RenewalService StartAsync");
 
       foreach (var hook in hooks)

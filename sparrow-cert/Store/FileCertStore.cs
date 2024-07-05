@@ -6,10 +6,10 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert.Store;
 
-public class FileCertStore(Notify notify, bool isStaging, string basePath, string filePrefix) : ICertStore {
+public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath, string filePrefix) : ICertStore {
    
    public bool IsStaging { get; init; } = isStaging;
-   private Notify _notify { get; init; } = notify;
+   private NotifyConfig _notify { get; init; } = notify;
 
    public Task Save(CertType type, IStorableCert cert) {
       var path = GetPath(type);

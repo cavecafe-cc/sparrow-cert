@@ -60,7 +60,7 @@ public static class RegistrationExtensions {
    }
 
    public static void AddSparrowCertFileCertStore(this IServiceCollection services,
-                                                  Notify notify,
+                                                  NotifyConfig notify,
                                                   bool isStaging,
                                                   string basePath,
                                                   string filePrefix) {
@@ -137,7 +137,7 @@ public static class RegistrationExtensions {
       app.UseMiddleware<ChallengeApprovalMiddleware>();
    }
 
-   public static void AddSparrowCertRenewalHook(this IServiceCollection services, Notify notify, IEnumerable<string> domains) {
+   public static void AddSparrowCertRenewalHook(this IServiceCollection services, NotifyConfig notify, IEnumerable<string> domains) {
       services.AddSingleton<IRenewalHook, RenewalHook>(x => new RenewalHook(notify, domains.ToArray()));
    }
 }

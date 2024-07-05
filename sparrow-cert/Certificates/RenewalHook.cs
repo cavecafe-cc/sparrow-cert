@@ -4,9 +4,9 @@ using SparrowCert.Certes;
 
 namespace SparrowCert;
 
-public class RenewalHook(Notify notify, string[] domains) : IRenewalHook {
+public class RenewalHook(NotifyConfig notify, string[] domains) : IRenewalHook {
    
-   private readonly Notify _notify = notify;
+   private readonly NotifyConfig _notify = notify;
    private readonly string[] _domains = domains;
 
    public virtual Task OnStartAsync() {
