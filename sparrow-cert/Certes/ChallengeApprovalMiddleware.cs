@@ -17,6 +17,7 @@ public class ChallengeApprovalMiddleware(
       if (context.Request.Path.StartsWithSegments(AcmeChallengePrefixSegments)) {
          return ProcessAcmeChallenge(context);
       }
+
       return next(context);
    }
 

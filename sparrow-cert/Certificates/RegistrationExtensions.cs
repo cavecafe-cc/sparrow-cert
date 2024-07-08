@@ -97,7 +97,7 @@ public static class RegistrationExtensions {
    public static void AddSparrowCertFileChallengeStore(
       this IServiceCollection services,
       bool isStaging,
-      string basePath, 
+      string basePath,
       string filePrefix) {
       AddSparrowCertChallengeStore(services,
          new FileChallengeStore(basePath, filePrefix + (isStaging ? ".staging" : "")));
@@ -118,13 +118,12 @@ public static class RegistrationExtensions {
    }
 
    public static void AddSparrowCert(
-      this IServiceCollection services, CertJsonConfiguration config) {
-      
+      this IServiceCollection services, CertConfiguration config) {
       services.AddTransient<IConfigureOptions<KestrelServerOptions>, RenewalOptions>();
       services.AddSparrowCertStore();
       services.AddSparrowCertFileChallengeStore(config.UseStaging, config.StorePath, config.CertFriendlyName);
       services.AddSingleton(config);
-      
+
       services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();
       services.AddSingleton<ICertValidator, CertValidator>();
       services.AddSingleton<ICertProvider, CertProvider>();

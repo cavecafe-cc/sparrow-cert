@@ -13,7 +13,7 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
    public void Dispose() {
       email = null;
    }
-   
+
    public async Task<bool> Notify(CertType type, byte[] data) {
       var result = false;
       try {
@@ -24,7 +24,7 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
          };
          var fileName = type switch {
             CertType.PrivateKey => $"{domain}-privkey.pem",
-            CertType.PfxCert => $"{domain}-cert.pfx", 
+            CertType.PfxCert => $"{domain}-cert.pfx",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var smtp = new SmtpClient(email.SmtpHost, email.SmtpPort) {
@@ -39,15 +39,15 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
          mail.Attachments.Add(new Attachment(memoryStream, fileName));
          if (type == CertType.PfxCert) {
             var pems = CertUtil.CreatePemFilesFromPfx(data, domain);
-            
+
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.chainPem));
             mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-chain.pem"));
-            
+
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.certPem));
             mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-cert.pem"));
-            
+
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.fullchainPem));
             mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-fullchain.pem"));
@@ -59,6 +59,7 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
       catch (Exception e) {
          Console.WriteLine($"Error sending email: {e.Message}");
       }
+
       return await Task.FromResult(result);
    }
 }

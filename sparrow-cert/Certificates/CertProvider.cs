@@ -9,7 +9,7 @@ namespace SparrowCert.Certificates;
 
 public class CertProvider : ICertProvider {
    private readonly IStore _store;
-   private readonly CertJsonConfiguration _options;
+   private readonly CertConfiguration _options;
    private readonly ILetsEncryptClientFactory _factory;
    private readonly ICertValidator _validator;
    private readonly ILogger<CertProvider> _logger;
@@ -17,7 +17,7 @@ public class CertProvider : ICertProvider {
    private readonly string[] _domains;
 
    public CertProvider(
-      CertJsonConfiguration options,
+      CertConfiguration options,
       ICertValidator validator,
       IStore store,
       ILetsEncryptClientFactory factory,
@@ -26,6 +26,7 @@ public class CertProvider : ICertProvider {
       if (domains == null || domains.Length == 0) {
          throw new ArgumentException("Invalid domains configuration");
       }
+
       _options = options;
       _domains = domains;
       _store = store;
@@ -33,16 +34,16 @@ public class CertProvider : ICertProvider {
       _validator = validator;
       _logger = logger;
    }
-   
+
    private string PrintCertInfo(ICert cert) {
       if (cert == null) {
-         return $"\nDomains: [ {string.Join(',', _domains)} ]\nNo certificate found.";
+         return $"\nDomains: [ {string.Join(", ", _domains)} ]\nNo certificate found.";
       }
-      return $"\nDomains: [ {string.Join(',', _domains)} ]\nThumbprint: {cert.Thumbprint}, \nNotBefore: {cert.NotBefore}, \nNotAfter: {cert.NotAfter}";
+
+      return $"\nDomains: [ {string.Join(", ", _domains)} ]\nThumbprint: {cert.Thumbprint}, \nNotBefore: {cert.NotBefore}, \nNotAfter: {cert.NotAfter}";
    }
 
    public async Task<RenewalResult> RenewIfNeeded(ICert current = null) {
-      
       _logger.LogInformation("Checking renewal required ...");
       if (_validator.IsValid(current)) {
          _logger.LogInformation(

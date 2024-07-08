@@ -24,7 +24,7 @@ public class CertStore(
       var bytes = await onLoad(CertType.PrivateKey);
       return bytes == null ? null : new LetsEncryptX509Cert(bytes, pwd);
    }
-   
+
    public async Task<bool> NotifyCert(CertType type, byte[] data) {
       return await onNotify(type, data);
    }

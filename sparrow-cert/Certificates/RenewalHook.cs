@@ -5,7 +5,6 @@ using SparrowCert.Certes;
 namespace SparrowCert;
 
 public class RenewalHook(NotifyConfig notify, string[] domains) : IRenewalHook {
-   
    private readonly NotifyConfig _notify = notify;
    private readonly string[] _domains = domains;
 

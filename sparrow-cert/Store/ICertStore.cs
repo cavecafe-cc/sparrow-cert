@@ -4,7 +4,6 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert.Store;
 
-
 /// <summary>
 /// Cert can be sent to a channel
 /// </summary>
@@ -14,7 +13,6 @@ public enum ChannelType {
 }
 
 public interface ICertStore {
-   
    bool IsStaging { get; init; }
    Task Save(CertType type, IStorableCert cert);
    Task<IKeyCert> GetPrivateKey();

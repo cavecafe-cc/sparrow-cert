@@ -15,10 +15,9 @@ public interface ILetsEncryptClient {
    Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder);
 }
 
-public class LetsEncryptClient(IAcmeContext acme, CertJsonConfiguration options, ILogger logger) : ILetsEncryptClient {
+public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILogger logger) : ILetsEncryptClient {
    private string CertFriendlyName => (
-      string.IsNullOrWhiteSpace(options.CertFriendlyName) ? 
-         options.Domains.First() : options.CertFriendlyName);
+      string.IsNullOrWhiteSpace(options.CertFriendlyName) ? options.Domains.First() : options.CertFriendlyName);
 
    public async Task<PlacedOrder> PlaceOrder(string[] domains) {
       logger.LogInformation($"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
@@ -76,7 +75,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertJsonConfiguration options,
          OrganizationUnit = req.OrganizationUnit,
          CommonName = req.CommonName
       };
-      
+
       var certificateChain = await order.Generate(csrInfo, keyPair);
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;

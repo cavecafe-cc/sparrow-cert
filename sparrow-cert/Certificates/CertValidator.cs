@@ -10,11 +10,11 @@ public interface ICertValidator {
 }
 
 public class CertValidator(
-   CertJsonConfiguration options,
+   CertConfiguration options,
    ILogger<CertValidator> logger) : ICertValidator {
    public bool IsValid(ICert cert) {
       try {
-         if (cert == null) 
+         if (cert == null)
             return false;
 
          var now = DateTime.Now;

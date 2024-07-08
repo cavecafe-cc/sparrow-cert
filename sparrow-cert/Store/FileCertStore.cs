@@ -7,7 +7,6 @@ using SparrowCert.Certificates;
 namespace SparrowCert.Store;
 
 public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath, string filePrefix) : ICertStore {
-   
    public bool IsStaging { get; init; } = isStaging;
    private NotifyConfig _notify { get; init; } = notify;
 
@@ -16,12 +15,14 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
       lock (typeof(FileCertStore)) {
          File.WriteAllBytes(path, cert.RawData);
       }
+
       if (_notify != null) {
          _ = NotifyCert(type, cert.RawData);
       }
       else {
          Console.Error.WriteLine($"No 'notify' setup for {type}");
       }
+
       return Task.CompletedTask;
    }
 
@@ -51,7 +52,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
       };
       return Path.Combine(basePath, filePrefix + "_" + fileEnding);
    }
-   
+
    public async Task<bool> NotifyCert(CertType type, byte[] data) {
       if (_notify == null) return false;
       var ret = false;
@@ -59,16 +60,17 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
          try {
             using var sender = new SlackSender(_notify.Slack, filePrefix);
             ret = await sender.Notify(type, data);
-         } 
+         }
          catch (Exception e) {
             Console.Error.WriteLine(e);
          }
       }
+
       if (_notify.Email is not { Enabled: true }) return ret;
       try {
          using var sender = new EmailSender(_notify.Email, filePrefix);
          ret = await sender.Notify(type, data);
-      } 
+      }
       catch (Exception e) {
          Console.Error.WriteLine(e);
       }

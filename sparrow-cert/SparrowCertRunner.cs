@@ -11,47 +11,43 @@ using SparrowCert.Certes;
 
 namespace SparrowCert;
 
-public class SparrowCertRunner(string configPath = "") : IHostedService {
-   private CertJsonConfiguration _cert { get; } = new(configPath);
+public class SparrowCertRunner(CertConfiguration config) : IHostedService {
+   private bool _isStarted = false; 
 
-   public CertJsonConfiguration GetBuildArgs() {
-      return _cert;
-   }
-   
    public void ConfigureServices(IServiceCollection services) {
-      if (_cert == null) {
+      if (config == null) {
          throw new InvalidDataException("no configuration found");
       }
-      Console.WriteLine($"Starting with '{(_cert.UseStaging ? "Staging" : "Prod")}' environment");
-      Console.WriteLine($"stores at '{_cert.StorePath}'");
       
-      services.AddSparrowCert(_cert);
+      Console.WriteLine($"Starting with '{(config.UseStaging ? "Staging" : "Prod")}' environment");
+      Console.WriteLine($"stores at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+      services.AddSparrowCert(config);
       services.AddSparrowCertFileCertStore(
-         _cert.Notify, 
-         _cert.UseStaging, 
-         _cert.StorePath, 
-         _cert.CertFriendlyName
+         config.Notify,
+         config.UseStaging,
+         config.StorePath,
+         config.CertFriendlyName
       );
-      services.AddSparrowCertFileChallengeStore(_cert.UseStaging, basePath:_cert.StorePath, _cert.CertFriendlyName);
-      services.AddSparrowCertRenewalHook(_cert.Notify, _cert.Domains);
-   }
-   
-   public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-      
-      app.UseSparrowCert();
-      app.UseAntiforgery();
-      app.UseRateLimiter();
-      
-      app.Run(async (context) => {
-         await context.Response.WriteAsync($"{nameof(SparrowCertRunner)} is started in '{env.EnvironmentName}' environment.");
-      });
+      services.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.CertFriendlyName);
+      services.AddSparrowCertRenewalHook(config.Notify, config.Domains);
    }
 
+   public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+      app.UseSparrowCert();
+      app.Run(async (context) => {
+         await context.Response.WriteAsync($"{nameof(SparrowCertRunner)} is started in '{env}'.");
+      });
+   }
+   
    public Task StartAsync(CancellationToken cancellationToken) {
-      throw new NotImplementedException();
+      Console.WriteLine($"{nameof(SparrowCertRunner)} is starting.");
+      _isStarted = true;
+      return Task.CompletedTask;
    }
 
    public Task StopAsync(CancellationToken cancellationToken) {
-      throw new NotImplementedException();
+      Console.WriteLine($"{nameof(SparrowCertRunner)} is stopping.");
+      _isStarted = false;
+      return Task.CompletedTask;
    }
 }

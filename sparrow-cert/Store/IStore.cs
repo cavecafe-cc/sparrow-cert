@@ -5,7 +5,6 @@ using SparrowCert.Certificates;
 namespace SparrowCert.Store;
 
 public interface IStore {
-   
    bool IsStaging { get; init; }
    Task<IKey> GetPrivateKey();
    Task<ChallengeInfo[]> GetChallenges();

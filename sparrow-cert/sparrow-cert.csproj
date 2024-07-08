@@ -33,12 +33,17 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+    <PackageReference Include="SharpOpenNat" Version="4.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="sparrow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\social-login\upnp\upnp.csproj" />
   </ItemGroup>
 
 </Project>

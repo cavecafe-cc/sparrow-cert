@@ -20,7 +20,7 @@ public class ChallengeStore(
    public Task<IEnumerable<ChallengeInfo>> Load() {
       return onLoad();
    }
-   
+
    public Task Delete(IEnumerable<ChallengeInfo> challenges) {
       return onDelete(challenges);
    }

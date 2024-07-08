@@ -9,7 +9,6 @@ using System.Text.Json;
 namespace SparrowCert.Store;
 
 public class FileChallengeStore(string basePath, string filePrefix) : IChallengeStore {
-   
    public async Task Delete(IEnumerable<ChallengeInfo> challenges) {
       var fromStored = await Load();
       var toStore = fromStored

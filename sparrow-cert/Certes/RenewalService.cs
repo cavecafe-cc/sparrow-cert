@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SparrowCert.Certificates;
+using Utils;
 using static SparrowCert.Certificates.RenewalStatus;
 
 namespace SparrowCert.Certes;
@@ -15,9 +16,8 @@ public class RenewalService(
    IEnumerable<IRenewalHook> hooks,
    IHostApplicationLifetime lifetime,
    ILogger<IRenewalService> logger,
-   CertJsonConfiguration config)
+   CertConfiguration config)
    : IRenewalService {
-   
    private readonly SemaphoreSlim _semaphore = new(1);
    private Timer _timer;
 
@@ -26,13 +26,11 @@ public class RenewalService(
    public Uri LetsEncryptUri => config.LetsEncryptUri;
 
    public async Task StartAsync(CancellationToken cancelToken) {
-      logger.LogTrace("RenewalService StartAsync");
-
-      foreach (var hook in hooks)
+      logger.LogTrace($"{nameof(RenewalService)} StartAsync");
+      foreach (var hook in hooks) {
          await hook.OnStartAsync();
-
-      _timer = new Timer(async state => await RunOnceWithErrorHandlingAsync(), null, Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
-
+      }
+      _timer = new Timer(async _ => await RunOnceWithErrorHandlingAsync(), null, Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
       lifetime.ApplicationStarted.Register(() => OnApplicationStarted(cancelToken));
    }
 
@@ -89,21 +87,48 @@ public class RenewalService(
 
    private async Task RunOnceWithErrorHandlingAsync() {
       try {
-         logger.LogTrace("RenewalService - timer callback starting");
+         logger.LogTrace($"{nameof(RenewalService)} - timer callback starting");
          await RunOnceAsync();
          _timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
       }
       catch (Exception e) when (config.RenewalFailMode != RenewalFailMode.Unhandled) {
-         logger.LogWarning(e, "Exception occurred renewing certificates: '{Message}'", e.Message);
+         logger.LogWarning(e, $"{nameof(RenewalService)} exception occurred renewing certificates: '{e.Message}'");
          if (config.RenewalFailMode == RenewalFailMode.LogAndRetry) {
             _timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
          }
       }
    }
 
-   private void OnApplicationStarted(CancellationToken t) {
-      logger.LogInformation("RenewalService - Application started");
-      _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromHours(1));
+   private async Task OnApplicationStarted(CancellationToken cancel) {
+      logger.LogInformation($"{nameof(RenewalService)} - started");
+      
+      var isReadyForAcme = UPnPConfiguration.CheckPortsOpened(config.CertFriendlyName, [80, 443]);
+      if (!isReadyForAcme) {
+         logger.LogWarning($"Domain '{config.CertFriendlyName}' unreachable, renewal is not possible.");
+         isReadyForAcme = await config.UPnP.OpenPortAsync(
+            [
+               "Trying to perform port forwarding, please check the followings.",
+               "  1. UPnP is enabled on your network device",
+               "  2. No other computers is using port 80 and 443",
+               "[NOTE]",
+               " Some routers won't allow to open these ports by UPnP.",
+               " You can change them by logging into the routers web interface.",
+               "",
+               "Press any key to continue..."
+            ],
+            10,
+            cancel
+         );
+      }
+      
+      if (isReadyForAcme) {
+         logger.LogInformation($"Domain '{config.CertFriendlyName}' renewal will be retried every 24 hours");
+         _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
+      }
+      else {
+         logger.LogError("Renewal stopped. Please check the network configuration and try again");
+         StopAsync(cancel);
+      }
    }
 
    public void Dispose() {

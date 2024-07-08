@@ -18,11 +18,10 @@ internal class Store(
    IEnumerable<ICertStore> certStores,
    IEnumerable<IChallengeStore> challengeStores,
    ILogger<IStore> logger) : IStore {
-   
    private const string DnsChallengeNameFormat = "_acme-challenge.{0}";
    private const string WildcardRegex = @"^\*\.";
    public bool IsStaging { get; init; }
-   
+
    public async Task SavePrivateKey(IKey key) {
       await SaveCert(CertType.PrivateKey, new PrivateKey(key), certStores);
    }
@@ -51,7 +50,7 @@ internal class Store(
       logger.LogTrace($"Saving {type} certificate in stores");
 
       var tasks = stores.Select(store => store.Save(type, cert));
-      
+
       await Task.WhenAll(tasks);
    }
 
@@ -73,6 +72,7 @@ internal class Store(
          if (certificate != null)
             return certificate;
       }
+
       logger.LogTrace($"Did not find any cert within stores [{string.Join(",", certStores)}].");
       return null;
    }
@@ -84,6 +84,7 @@ internal class Store(
             return privateKey.Key;
          }
       }
+
       logger.LogTrace($"Did not find private key with in stores [{string.Join(",", certStores)}].");
       return null;
    }
