@@ -39,9 +39,6 @@ public class SparrowCertRunner : IHostedService {
          });
       })
       .ConfigureServices(svc => {
-         // services.AddControllers();
-         // Add other services as needed
-         
          Console.WriteLine($"{nameof(SparrowCertRunner)} ConfigureServices called");
          if (config == null) {
             throw new InvalidDataException("no configuration found");
@@ -62,9 +59,6 @@ public class SparrowCertRunner : IHostedService {
       {
          Console.WriteLine($"{nameof(SparrowCertRunner)} Configure called");
          app.UseSparrowCert();
-         
-         // app.UseRouting();
-         // app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
       })
       .Build();
    }
