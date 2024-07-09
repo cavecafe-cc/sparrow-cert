@@ -15,7 +15,7 @@ public interface ILetsEncryptClient {
    Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder);
 }
 
-public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILogger logger) : ILetsEncryptClient {
+public class LetsEncryptClient(IAcmeContext acme, SparrowConfiguration options, ILogger logger) : ILetsEncryptClient {
    private string CertFriendlyName => (
       string.IsNullOrWhiteSpace(options.CertFriendlyName) ? options.Domains.First() : options.CertFriendlyName);
 

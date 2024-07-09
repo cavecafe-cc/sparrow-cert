@@ -16,7 +16,7 @@ public class RenewalService(
    IEnumerable<IRenewalHook> hooks,
    IHostApplicationLifetime lifetime,
    ILogger<IRenewalService> logger,
-   CertConfiguration config)
+   SparrowConfiguration config)
    : IRenewalService {
    private readonly SemaphoreSlim _semaphore = new(1);
    private Timer _timer;

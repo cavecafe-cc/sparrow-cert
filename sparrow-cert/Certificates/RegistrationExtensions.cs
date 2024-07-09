@@ -118,7 +118,7 @@ public static class RegistrationExtensions {
    }
 
    public static void AddSparrowCert(
-      this IServiceCollection services, CertConfiguration config) {
+      this IServiceCollection services, SparrowConfiguration config) {
       services.AddTransient<IConfigureOptions<KestrelServerOptions>, RenewalOptions>();
       services.AddSparrowCertStore();
       services.AddSparrowCertFileChallengeStore(config.UseStaging, config.StorePath, config.CertFriendlyName);

@@ -1,53 +1,83 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Protocols.Configuration;
 using SparrowCert.Certes;
+using SparrowCert.Certificates;
 
 namespace SparrowCert;
 
-public class SparrowCertRunner(CertConfiguration config) : IHostedService {
-   private bool _isStarted = false; 
+public class SparrowCertRunner : IHostedService {
+   
+   private readonly IWebHost host;
 
-   public void ConfigureServices(IServiceCollection services) {
-      if (config == null) {
-         throw new InvalidDataException("no configuration found");
-      }
+   public SparrowCertRunner(SparrowConfiguration cfg) {
+      Console.WriteLine($"{nameof(SparrowCertRunner)} ctor called");
+      var config = cfg;
       
-      Console.WriteLine($"Starting with '{(config.UseStaging ? "Staging" : "Prod")}' environment");
-      Console.WriteLine($"stores at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
-      services.AddSparrowCert(config);
-      services.AddSparrowCertFileCertStore(
-         config.Notify,
-         config.UseStaging,
-         config.StorePath,
-         config.CertFriendlyName
-      );
-      services.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.CertFriendlyName);
-      services.AddSparrowCertRenewalHook(config.Notify, config.Domains);
-   }
+      #region check certificates
+      var certPath = Path.Combine(config.StorePath, $"{config.Domains.First()}.pfx");
+      var certExists = File.Exists(certPath);
+      var x509 = certExists ? 
+         new X509Certificate2(certPath, config.CertPwd) : 
+         CertUtil.GenerateSelfSignedCertificate(config.Domains.First());
+      var certValid = x509.NotBefore < DateTime.Now && x509.NotAfter > DateTime.Now;
+      if (!certValid) {
+         throw new InvalidConfigurationException("invalid certificate.");
+      }
+      #endregion
 
-   public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-      app.UseSparrowCert();
-      app.Run(async (context) => {
-         await context.Response.WriteAsync($"{nameof(SparrowCertRunner)} is started in '{env}'.");
-      });
+      host = new WebHostBuilder().UseKestrel(kso => {
+         kso.ListenAnyIP(config.HttpPort);
+         kso.ListenAnyIP(config.HttpsPort, lo => {
+            lo.UseHttps(x509);
+         });
+      })
+      .ConfigureServices(svc => {
+         // services.AddControllers();
+         // Add other services as needed
+         
+         Console.WriteLine($"{nameof(SparrowCertRunner)} ConfigureServices called");
+         if (config == null) {
+            throw new InvalidDataException("no configuration found");
+         }
+         Console.WriteLine($"{nameof(SparrowCertRunner)} UseStaging='{config.UseStaging}'");
+         Console.WriteLine($"{nameof(SparrowCertRunner)} cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+         svc.AddSparrowCert(config);
+         svc.AddSparrowCertFileCertStore(
+            config.Notify,
+            config.UseStaging,
+            config.StorePath,
+            config.CertFriendlyName
+         );
+         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.CertFriendlyName);
+         svc.AddSparrowCertRenewalHook(config.Notify, config.Domains);
+      })
+      .Configure(app =>
+      {
+         Console.WriteLine($"{nameof(SparrowCertRunner)} Configure called");
+         app.UseSparrowCert();
+         
+         // app.UseRouting();
+         // app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+      })
+      .Build();
    }
    
-   public Task StartAsync(CancellationToken cancellationToken) {
-      Console.WriteLine($"{nameof(SparrowCertRunner)} is starting.");
-      _isStarted = true;
-      return Task.CompletedTask;
+   public async Task StartAsync(CancellationToken cancellationToken)
+   {
+      Console.WriteLine($"{nameof(SparrowCertRunner)} StartAsync called");
+      await host.StartAsync(cancellationToken);
    }
 
-   public Task StopAsync(CancellationToken cancellationToken) {
-      Console.WriteLine($"{nameof(SparrowCertRunner)} is stopping.");
-      _isStarted = false;
-      return Task.CompletedTask;
+   public async Task StopAsync(CancellationToken cancellationToken)
+   {
+      Console.WriteLine($"{nameof(SparrowCertRunner)} StopAsync called");
+      await host.StopAsync(cancellationToken);
    }
 }
