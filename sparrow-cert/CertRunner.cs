@@ -12,12 +12,12 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert;
 
-public class SparrowCertRunner : IHostedService {
+public class CertRunner : IHostedService {
    
    private readonly IWebHost host;
 
-   public SparrowCertRunner(SparrowConfiguration cfg) {
-      Console.WriteLine($"{nameof(SparrowCertRunner)} ctor called");
+   public CertRunner(CertConfiguration cfg) {
+      Console.WriteLine($"{nameof(CertRunner)} ctor called");
       var config = cfg;
       
       #region check certificates
@@ -39,12 +39,12 @@ public class SparrowCertRunner : IHostedService {
          });
       })
       .ConfigureServices(svc => {
-         Console.WriteLine($"{nameof(SparrowCertRunner)} ConfigureServices called");
+         Console.WriteLine($"{nameof(CertRunner)} ConfigureServices called");
          if (config == null) {
             throw new InvalidDataException("no configuration found");
          }
-         Console.WriteLine($"{nameof(SparrowCertRunner)} UseStaging='{config.UseStaging}'");
-         Console.WriteLine($"{nameof(SparrowCertRunner)} cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+         Console.WriteLine($"{nameof(CertRunner)} UseStaging='{config.UseStaging}'");
+         Console.WriteLine($"{nameof(CertRunner)} cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
          svc.AddSparrowCert(config);
          svc.AddSparrowCertFileCertStore(
             config.Notify,
@@ -57,21 +57,21 @@ public class SparrowCertRunner : IHostedService {
       })
       .Configure(app =>
       {
-         Console.WriteLine($"{nameof(SparrowCertRunner)} Configure called");
+         Console.WriteLine($"{nameof(CertRunner)} Configure called");
          app.UseSparrowCert();
       })
       .Build();
    }
    
-   public async Task StartAsync(CancellationToken cancellationToken)
+   public async Task StartAsync(CancellationToken cancel)
    {
-      Console.WriteLine($"{nameof(SparrowCertRunner)} StartAsync called");
-      await host.StartAsync(cancellationToken);
+      Console.WriteLine($"{nameof(CertRunner)} StartAsync called");
+      await host.StartAsync(cancel);
    }
 
    public async Task StopAsync(CancellationToken cancellationToken)
    {
-      Console.WriteLine($"{nameof(SparrowCertRunner)} StopAsync called");
+      Console.WriteLine($"{nameof(CertRunner)} StopAsync called");
       await host.StopAsync(cancellationToken);
    }
 }

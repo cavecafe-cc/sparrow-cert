@@ -10,7 +10,7 @@ public interface ICertValidator {
 }
 
 public class CertValidator(
-   SparrowConfiguration options,
+   CertConfiguration options,
    ILogger<CertValidator> logger) : ICertValidator {
    public bool IsValid(ICert cert) {
       try {

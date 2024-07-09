@@ -16,7 +16,7 @@ public class RenewalService(
    IEnumerable<IRenewalHook> hooks,
    IHostApplicationLifetime lifetime,
    ILogger<IRenewalService> logger,
-   SparrowConfiguration config)
+   CertConfiguration config)
    : IRenewalService {
    private readonly SemaphoreSlim _semaphore = new(1);
    private Timer _timer;
@@ -104,7 +104,7 @@ public class RenewalService(
       
       var isReadyForAcme = UPnPConfiguration.CheckPortsOpened(config.CertFriendlyName, [80, 443]);
       if (!isReadyForAcme) {
-         logger.LogWarning($"Domain '{config.CertFriendlyName}' unreachable, renewal is not possible.");
+         logger.LogWarning($"Domain '{config.CertFriendlyName}' unreachable, renewal is not possible");
          isReadyForAcme = await config.UPnP.OpenPortAsync(
             [
                "Trying to perform port forwarding, please check the followings.",

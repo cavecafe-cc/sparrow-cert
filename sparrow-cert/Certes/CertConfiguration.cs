@@ -9,11 +9,11 @@ using Utils;
 
 namespace SparrowCert.Certes;
 
-public class SparrowConfiguration {
+public class CertConfiguration {
    
    public const string CERT_JSON = "cert.json";
    
-   public SparrowConfiguration(string configPath = "") {
+   public CertConfiguration(string configPath = "") {
       if (string.IsNullOrWhiteSpace(configPath)) {
          configPath = CERT_JSON;
       }

@@ -11,7 +11,7 @@ public interface ILetsEncryptClientFactory {
 
 public class LetsEncryptClientFactory(
    IStore store,
-   SparrowConfiguration options,
+   CertConfiguration options,
    ILoggerFactory loggerFactory) : ILetsEncryptClientFactory {
    private readonly ILogger _logger = loggerFactory.CreateLogger<LetsEncryptClientFactory>();
    private AcmeContext _acme;

@@ -9,7 +9,7 @@ namespace SparrowCert.Certificates;
 
 public class CertProvider : ICertProvider {
    private readonly IStore _store;
-   private readonly SparrowConfiguration _options;
+   private readonly CertConfiguration _options;
    private readonly ILetsEncryptClientFactory _factory;
    private readonly ICertValidator _validator;
    private readonly ILogger<CertProvider> _logger;
@@ -17,7 +17,7 @@ public class CertProvider : ICertProvider {
    private readonly string[] _domains;
 
    public CertProvider(
-      SparrowConfiguration options,
+      CertConfiguration options,
       ICertValidator validator,
       IStore store,
       ILetsEncryptClientFactory factory,
