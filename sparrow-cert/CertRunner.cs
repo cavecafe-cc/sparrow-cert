@@ -65,13 +65,13 @@ public class CertRunner : IHostedService {
    
    public async Task StartAsync(CancellationToken cancel)
    {
-      Console.WriteLine($"{nameof(CertRunner)} StartAsync called");
+      Console.WriteLine($"{nameof(CertRunner)} {nameof(StartAsync)} called");
       await host.StartAsync(cancel);
    }
 
    public async Task StopAsync(CancellationToken cancellationToken)
    {
-      Console.WriteLine($"{nameof(CertRunner)} StopAsync called");
+      Console.WriteLine($"{nameof(CertRunner)}:StopAsync called");
       await host.StopAsync(cancellationToken);
    }
 }
