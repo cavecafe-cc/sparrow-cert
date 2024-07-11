@@ -13,6 +13,7 @@
     <RepositoryUrl>https://github.com/cavecafe-cc/sparrow-cert</RepositoryUrl>
     <PackageTags>certificate, sparrow, letsencrypt, acme</PackageTags>
     <Version>$(Version)</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,6 +42,12 @@
   <ItemGroup>
     <None Include="sparrow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath/>
     </None>
   </ItemGroup>
 
