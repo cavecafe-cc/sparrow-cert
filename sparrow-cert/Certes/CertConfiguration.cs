@@ -5,11 +5,11 @@ using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
+using Sparrow.UPnP;
 
 namespace SparrowCert.Certes;
 
 public class CertConfiguration {
-   
    public const string CERT_JSON = "cert.json";
    
    public CertConfiguration(string configPath = "") {
@@ -74,12 +74,12 @@ public class CertConfiguration {
 
 // Nested Classes
 public class CertSigningRequestConfig {
-   public string CountryName { get; set; }
-   public string State { get; set; }
-   public string Locality { get; set; }
-   public string Organization { get; set; }
-   public string OrganizationUnit { get; set; }
-   public string CommonName { get; set; }
+   public string CountryName { get; init; }
+   public string State { get; init; }
+   public string Locality { get; init; }
+   public string Organization { get; init; }
+   public string OrganizationUnit { get; init; }
+   public string CommonName { get; init; }
 }
 
 public class NotifyConfig {

@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/cavecafe-cc/sparrow-cert</PackageProjectUrl>
     <RepositoryUrl>https://github.com/cavecafe-cc/sparrow-cert</RepositoryUrl>
     <PackageTags>certificate, sparrow, letsencrypt, acme</PackageTags>
-    <Version>1.1.0</Version>
+    <Version>1.1.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,6 +35,7 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols" Version="7.1.2" />
     <PackageReference Include="SharpOpenNat" Version="4.0.3" />
+    <PackageReference Include="sparrow-upnp" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

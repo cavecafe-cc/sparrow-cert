@@ -47,7 +47,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
    private string GetPath(CertType type) {
       var fileEnding = type switch {
          CertType.PrivateKey => ("privkey.pem"),
-         CertType.PfxCert => ("cert.pfx"),
+         CertType.PfxCert => (".pfx"),
          _ => throw new NotSupportedException()
       };
       return Path.Combine(basePath, filePrefix + "_" + fileEnding);

@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Sparrow.UPnP;
 using SparrowCert.Certificates;
 
 using static SparrowCert.Certificates.RenewalStatus;
@@ -25,13 +27,13 @@ public class RenewalService(
 
    public Uri LetsEncryptUri => config.LetsEncryptUri;
 
-   public async Task StartAsync(CancellationToken cancelToken) {
+   public async Task StartAsync(CancellationToken cancel) {
       logger.LogTrace($"{nameof(RenewalService)} StartAsync");
       foreach (var hook in hooks) {
          await hook.OnStartAsync();
       }
       _timer = new Timer(async _ => await RunOnceWithErrorHandlingAsync(), null, Timeout.InfiniteTimeSpan, TimeSpan.FromHours(1));
-      lifetime.ApplicationStarted.Register(() => OnApplicationStarted(cancelToken));
+      lifetime.ApplicationStarted.Register(() => _ = OnApplicationStarted(cancel));
    }
 
    public async Task StopAsync(CancellationToken cancelToken) {
@@ -102,10 +104,11 @@ public class RenewalService(
    private async Task OnApplicationStarted(CancellationToken cancel) {
       logger.LogInformation($"{nameof(RenewalService)} - started");
       
-      var isReadyForAcme = UPnPConfiguration.CheckPortsOpened(config.CertFriendlyName, [80, 443]);
+      var checker = new UPnPChecker(config.UPnP);
+      var isReadyForAcme = checker.CheckPortsOpened(config.CertFriendlyName, [80, 443]);
       if (!isReadyForAcme) {
          logger.LogWarning($"Domain '{config.CertFriendlyName}' unreachable, renewal is not possible");
-         isReadyForAcme = await config.UPnP.OpenPortAsync(
+         isReadyForAcme = await checker.OpenPortAsync(
             [
                "Trying to perform port forwarding, please check the followings.",
                "  1. UPnP is enabled on your network device",
@@ -127,7 +130,7 @@ public class RenewalService(
       }
       else {
          logger.LogError("Renewal stopped. Please check the network configuration and try again");
-         StopAsync(cancel);
+         await StopAsync(cancel);
       }
    }
 
