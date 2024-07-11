@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SparrowCert.Certificates;
-using Utils;
+
 using static SparrowCert.Certificates.RenewalStatus;
 
 namespace SparrowCert.Certes;

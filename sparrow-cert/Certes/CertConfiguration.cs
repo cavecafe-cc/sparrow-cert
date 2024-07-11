@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
-using Utils;
 
 namespace SparrowCert.Certes;
 

@@ -39,7 +39,7 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify 
       try {
          var fileName = type switch {
             CertType.PrivateKey => $"{_domain}-privkey.pem",
-            CertType.PfxCert => $"{_domain}-cert.pfx",
+            CertType.PfxCert => $"{_domain}.pfx",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var subject = type switch {

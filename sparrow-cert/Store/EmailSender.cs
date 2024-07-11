@@ -24,7 +24,7 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
          };
          var fileName = type switch {
             CertType.PrivateKey => $"{domain}-privkey.pem",
-            CertType.PfxCert => $"{domain}-cert.pfx",
+            CertType.PfxCert => $"{domain}.pfx",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var smtp = new SmtpClient(email.SmtpHost, email.SmtpPort) {

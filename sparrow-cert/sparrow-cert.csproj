@@ -43,8 +43,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\social-login\upnp\upnp.csproj" />
-  </ItemGroup>
-
 </Project>
