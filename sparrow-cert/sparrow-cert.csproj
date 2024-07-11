@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/cavecafe-cc/sparrow-cert</PackageProjectUrl>
     <RepositoryUrl>https://github.com/cavecafe-cc/sparrow-cert</RepositoryUrl>
     <PackageTags>certificate, sparrow, letsencrypt, acme</PackageTags>
-    <Version>1.1.2</Version>
+    <Version>$(Version)</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
