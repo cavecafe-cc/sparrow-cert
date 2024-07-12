@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,9 +106,10 @@ public class RenewalService(
       logger.LogInformation($"{nameof(RenewalService)} - started");
       
       var checker = new UPnPChecker(config.UPnP);
-      var isReadyForAcme = checker.CheckPortsOpened(config.CertFriendlyName, [80, 443]);
+      var domain = config.Domains.First();
+      var isReadyForAcme = checker.CheckPortsOpened(domain, [80, 443]);
       if (!isReadyForAcme) {
-         logger.LogWarning($"Domain '{config.CertFriendlyName}' unreachable, renewal is not possible");
+         logger.LogWarning($"Domain '{domain}' unreachable, renewal is not possible");
          isReadyForAcme = await checker.OpenPortAsync(
             [
                "Trying to perform port forwarding, please check the followings.",
@@ -125,7 +127,7 @@ public class RenewalService(
       }
       
       if (isReadyForAcme) {
-         logger.LogInformation($"Domain '{config.CertFriendlyName}' renewal will be retried every 24 hours");
+         logger.LogInformation($"Domain '{domain}' renewal will be retried every 24 hours");
          _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
       }
       else {

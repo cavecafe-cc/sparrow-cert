@@ -121,7 +121,7 @@ public static class RegistrationExtensions {
       this IServiceCollection services, CertConfiguration config) {
       services.AddTransient<IConfigureOptions<KestrelServerOptions>, RenewalOptions>();
       services.AddSparrowCertStore();
-      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.StorePath, config.CertFriendlyName);
+      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.StorePath, config.Domains.First());
       services.AddSingleton(config);
 
       services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();

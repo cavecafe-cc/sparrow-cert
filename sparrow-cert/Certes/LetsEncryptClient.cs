@@ -80,7 +80,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;
       var pfxBytes = pfxBuilder.Build(CertFriendlyName, options.CertPwd);
-      logger.LogInformation("Certificate acquired.");
+      logger.LogInformation($"'{CertFriendlyName}' certificate acquired.");
       return pfxBytes;
    }
 

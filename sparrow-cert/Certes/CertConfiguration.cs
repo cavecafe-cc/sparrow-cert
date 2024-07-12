@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
@@ -39,9 +40,23 @@ public class CertConfiguration {
       HttpPort = config.GetValue<int>("HttpPort");
       HttpsPort = config.GetValue<int>("HttpsPort");
       CertFriendlyName = config.GetValue<string>("CertFriendlyName");
+      CertFriendlyName = string.IsNullOrWhiteSpace(CertFriendlyName) ? Domains.First() : CertFriendlyName;
       StorePath = config.GetValue<string>("StorePath");
+      CopyCertFiles(StorePath, configPath, Domains.First(), [ "*.pfx", "*.json", "*.pem" ], false);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
+   }
+
+   // Copy the files with the given extensions to the store path
+   private void CopyCertFiles(string storePath, string configPath, string domain, string[] extensions, bool overwrite = false) {
+      if (string.IsNullOrWhiteSpace(storePath) || !Directory.Exists(storePath)) return;
+      foreach (var ext in extensions) {
+         if (string.IsNullOrWhiteSpace(ext)) continue;
+         var dir = Path.GetDirectoryName(configPath);
+         if (dir == null) continue;
+         var files = Directory.GetFiles(dir, $"{domain}{ext}");
+         files.ToList().ForEach(f => File.Copy(f, Path.Combine(storePath, Path.GetFileName(f)), overwrite));
+      }
    }
 
    // Properties

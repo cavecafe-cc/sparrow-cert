@@ -50,9 +50,9 @@ public class CertRunner : IHostedService {
             config.Notify,
             config.UseStaging,
             config.StorePath,
-            config.CertFriendlyName
+            config.Domains.First()
          );
-         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.CertFriendlyName);
+         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.Domains.First());
          svc.AddSparrowCertRenewalHook(config.Notify, config.Domains);
       })
       .Configure(app =>
