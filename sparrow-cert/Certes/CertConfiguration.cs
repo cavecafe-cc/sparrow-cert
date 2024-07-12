@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 using Sparrow.UPnP;
 
 namespace SparrowCert.Certes;
@@ -55,7 +57,30 @@ public class CertConfiguration {
          var dir = Path.GetDirectoryName(configPath);
          if (dir == null) continue;
          var files = Directory.GetFiles(dir, $"{domain}{ext}");
-         files.ToList().ForEach(f => File.Copy(f, Path.Combine(storePath, Path.GetFileName(f)), overwrite));
+         files.ToList().ForEach(f => {
+            try {
+               StringBuilder sb = new();
+               var filePath = Path.Combine(storePath, Path.GetFileName(f));
+               if (File.Exists(filePath)) {
+                  sb.Append($"File '{filePath}' already exists, ");
+                  if (overwrite) {
+                     File.Delete(filePath);
+                     sb.Append($"will be replaced with new one.");
+                  }
+                  else {
+                     sb.Append($"using existing one.");
+                     Console.WriteLine(sb.ToString());
+                     return;
+                  }
+               }
+               sb.Append($"Copying file '{f}' to '{filePath}'");
+               File.Copy(f, filePath, overwrite);
+               Console.WriteLine(sb.ToString());
+            }
+            catch (Exception e) {
+               Console.WriteLine($"Error copying file '{f}' to '{storePath}': {e.Message}");
+            }
+         });
       }
    }
 
