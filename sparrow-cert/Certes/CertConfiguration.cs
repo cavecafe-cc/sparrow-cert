@@ -86,7 +86,7 @@ public class CertConfiguration {
    }
 
    // Properties
-   [JsonPropertyName("enabled")] public bool Enabled { get; init; } = false;
+   public bool Enabled { get; set; }
    public List<string> Domains { get; }
    public string Email { get; }
    public TimeSpan RenewBeforeExpiry { get; }
