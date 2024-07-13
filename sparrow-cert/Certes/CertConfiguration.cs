@@ -7,17 +7,16 @@ using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Sparrow.UPnP;
 
 namespace SparrowCert.Certes;
 
 public class CertConfiguration {
-   public const string CERT_JSON = "cert.json";
+   public const string JSON = "cert.json";
    
    public CertConfiguration(string configPath = "") {
       if (string.IsNullOrWhiteSpace(configPath)) {
-         configPath = CERT_JSON;
+         configPath = JSON;
       }
 
       if (!Path.IsPathRooted(configPath)) {
@@ -28,7 +27,9 @@ public class CertConfiguration {
          .AddJsonFile(configPath, optional: false, reloadOnChange: true);
 
       var config = builder.Build();
-
+      Enabled = config.GetValue<bool>("enabled");
+      if (!Enabled) return;
+      
       Domains = config.GetSection("Domains").Get<List<string>>();
       Email = config.GetValue<string>("Email");
       RenewBeforeExpiry = config.GetValue<TimeSpan>("RenewBeforeExpiry");
@@ -85,6 +86,7 @@ public class CertConfiguration {
    }
 
    // Properties
+   [JsonPropertyName("enabled")] public bool Enabled { get; init; } = false;
    public List<string> Domains { get; }
    public string Email { get; }
    public TimeSpan RenewBeforeExpiry { get; }
