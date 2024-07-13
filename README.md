@@ -37,6 +37,7 @@ The service is configured through a `cert.json` file. Here is an example configu
 
 ```json
 {
+  "Enabled": true,                           // default false, discarded if not enabled
   "Domains": [
     "www.own-domain.org",
     "api.own-domain.org"                      // your domain name (include sub-domains, if you have)
