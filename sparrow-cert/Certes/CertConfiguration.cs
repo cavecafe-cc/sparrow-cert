@@ -45,7 +45,7 @@ public class CertConfiguration {
       CertFriendlyName = config.GetValue<string>("CertFriendlyName");
       CertFriendlyName = string.IsNullOrWhiteSpace(CertFriendlyName) ? Domains.First() : CertFriendlyName;
       StorePath = config.GetValue<string>("StorePath");
-      CopyCertFiles(StorePath, configPath, Domains.First(), [ "*.pfx", "*.json", "*.pem" ], true);
+      CopyCertFiles(StorePath, configPath, Domains.First(), [ "*.pfx", "*.json", "*.pem" ]);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
    }
