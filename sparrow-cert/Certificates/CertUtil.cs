@@ -62,15 +62,12 @@ public abstract class CertUtil
       return certPem.ToString();
    }
    
-   public class FqdnValidator
-   {
-      private static readonly Regex FqdnRegex = new(
-         @"^(?=.{1,253}$)(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+(?:[A-Za-z]{2,})$",
-         RegexOptions.Compiled | RegexOptions.IgnoreCase);
+   private static readonly Regex FqdnRegex = new(
+      @"^(?=.{1,253}$)(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+(?:[A-Za-z]{2,})$",
+      RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-      public static bool IsValidFqdn(string fqdn) {
-         return !string.IsNullOrWhiteSpace(fqdn) && FqdnRegex.IsMatch(fqdn);
-      }
+   public static bool IsValidFqdn(string fqdn) {
+      return !string.IsNullOrWhiteSpace(fqdn) && FqdnRegex.IsMatch(fqdn);
    }
 
 }
