@@ -87,11 +87,11 @@ public class CertConfiguration {
 
    // Properties
    public bool Enabled { get; set; }
-   public List<string> Domains { get; }
-   public string Email { get; }
-   public TimeSpan RenewBeforeExpiry { get; }
-   public TimeSpan RenewAfterIssued { get; }
-   public bool UseStaging { get; }
+   public List<string> Domains { get; set; }
+   public string Email { get; set; }
+   public TimeSpan RenewBeforeExpiry { get; set; }
+   public TimeSpan RenewAfterIssued { get; set; }
+   public bool UseStaging { get; set; }
 
    [JsonIgnore]
    public Uri LetsEncryptUri => UseStaging
@@ -100,28 +100,28 @@ public class CertConfiguration {
 
    public CertSigningRequestConfig CertSigningRequest { get; }
    
-   public UPnPConfiguration UPnP { get; }
-   public RenewalFailMode RenewalFailMode { get; }
-   public KeyAlgorithm KeyAlgorithm { get; }
-   public TimeSpan RenewalStartupDelay { get; }
-   public int HttpPort { get; }
-   public int HttpsPort { get; }
-   public string CertFriendlyName { get; }
-   public string StorePath { get; }
-   public string CertPwd { get; }
-   public NotifyConfig Notify { get; }
+   public UPnPConfiguration UPnP { get; set; }
+   public RenewalFailMode RenewalFailMode { get; set; }
+   public KeyAlgorithm KeyAlgorithm { get; set; }
+   public TimeSpan RenewalStartupDelay { get; set; }
+   public int HttpPort { get; set; }
+   public int HttpsPort { get; set; }
+   public string CertFriendlyName { get; set; }
+   public string StorePath { get; set; }
+   public string CertPwd { get; set; }
+   public NotifyConfig Notify { get; set; }
    
 
 }
 
 // Nested Classes
 public class CertSigningRequestConfig {
-   public string CountryName { get; init; }
-   public string State { get; init; }
-   public string Locality { get; init; }
-   public string Organization { get; init; }
-   public string OrganizationUnit { get; init; }
-   public string CommonName { get; init; }
+   public string CountryName { get; set; }
+   public string State { get; set; }
+   public string Locality { get; set; }
+   public string Organization { get; set; }
+   public string OrganizationUnit { get; set; }
+   public string CommonName { get; set; }
 }
 
 public class NotifyConfig {
