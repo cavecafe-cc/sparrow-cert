@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace SparrowCert.Certificates;
 
-public abstract class CertUtil
+public abstract partial class CertUtil
 {
    public static X509Certificate2 GenerateSelfSignedCertificate(string subjectName) {
       using var rsa = RSA.Create(2048);
@@ -69,5 +69,12 @@ public abstract class CertUtil
    public static bool IsValidFqdn(string fqdn) {
       return !string.IsNullOrWhiteSpace(fqdn) && FqdnRegex.IsMatch(fqdn);
    }
+   
+   private static readonly Regex EmailRegex = MyRegex();
+   public static bool IsValidEmail(string email) {
+      return !string.IsNullOrWhiteSpace(email) && EmailRegex.IsMatch(email);
+   }
 
+    [GeneratedRegex(@"^(?(""[^\""]+""|([A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\[(?:[01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])(?:\.(?:[01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])){3}\]))@(?([A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]\.[A-Za-z]{2,})|(\[IPv6:(([0-9A-Fa-f]{1,4}:){7,7}[0-9A-Fa-f]{1,4}|([0-9A-Fa-f]{1,4}:){1,7}:|([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2}|([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3}|([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4}|([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6})|:((:[0-9A-Fa-f]{1,4}){1,7}|:)|fe80:(:[0-9A-Fa-f]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]|[1-9]?)?[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]|[1-9]?)?[0-9])|([0-9A-Fa-f]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]|[1-9]?)?[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]|[1-9]?)?[0-9])))\]))$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+    private static partial Regex MyRegex();
 }
