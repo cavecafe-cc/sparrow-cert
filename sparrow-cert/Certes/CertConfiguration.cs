@@ -99,7 +99,7 @@ public class CertConfiguration {
       ? WellKnownServers.LetsEncryptStagingV2
       : WellKnownServers.LetsEncryptV2;
 
-   public CertSigningRequestConfig CertSigningRequest { get; }
+   public CertSigningRequestConfig CertSigningRequest { get; set; }
    
    public UPnPConfiguration UPnP { get; set; }
    public RenewalFailMode RenewalFailMode { get; set; }
