@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
@@ -14,7 +15,31 @@ namespace SparrowCert.Certes;
 public class CertConfiguration {
    public const string JSON = "cert.json";
    
-   public CertConfiguration() { }
+   public static CertConfiguration Load(string configPath = "") {
+      return new CertConfiguration(configPath);
+   }
+   
+   public bool Save(string path, JsonSerializerOptions options = null) {
+      if (string.IsNullOrWhiteSpace(path)) {
+         path = JSON;
+      }
+
+      if (!Path.IsPathRooted(path)) {
+         path = Path.Combine(Directory.GetCurrentDirectory(), path);
+      }
+
+      try {
+         var json = JsonSerializer.Serialize(this, options);
+         File.WriteAllText(path, json);
+         return true;
+      }
+      catch (Exception e) {
+         Console.WriteLine($"Error saving configuration to '{path}': {e.Message}");
+         return false;
+      }
+   }
+   
+   public CertConfiguration() { }  // for serialization
    public CertConfiguration(string configPath = "") {
       if (string.IsNullOrWhiteSpace(configPath)) {
          configPath = JSON;
