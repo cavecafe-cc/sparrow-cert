@@ -14,6 +14,7 @@ namespace SparrowCert.Certes;
 public class CertConfiguration {
    public const string JSON = "cert.json";
    
+   public CertConfiguration() { }
    public CertConfiguration(string configPath = "") {
       if (string.IsNullOrWhiteSpace(configPath)) {
          configPath = JSON;
