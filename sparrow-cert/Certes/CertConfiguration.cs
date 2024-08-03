@@ -112,7 +112,7 @@ public class CertConfiguration {
    }
 
    // Properties
-   public bool Enabled { get; set; }
+   public bool Enabled { get; set; } = false;
    public List<string> Domains { get; set; }
    public string Email { get; set; }
    public TimeSpan RenewBeforeExpiry { get; set; }
