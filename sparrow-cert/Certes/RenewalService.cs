@@ -107,26 +107,28 @@ public class RenewalService(
       
       var checker = new UPnPChecker(config.UPnP);
       var domain = config.Domains.First();
-      var isReadyForAcme = checker.CheckPortsOpened(domain, [80, 443]);
-      if (!isReadyForAcme) {
-         logger.LogWarning($"Domain '{domain}' unreachable, renewal is not possible");
-         isReadyForAcme = await checker.OpenPortAsync(
-            [
-               "Trying to perform port forwarding, please check the followings.",
-               "  1. UPnP is enabled on your network device",
-               "  2. No other computers is using port 80 and 443",
-               "[NOTE]",
-               " Some routers won't allow to open these ports by UPnP.",
-               " You can change them by logging into the routers web interface.",
-               "",
-               "Press any key to continue..."
-            ],
-            10,
-            cancel
-         );
+      var reachablePorts = checker.CheckPortsOpened(domain, [80, 443]);
+      var notReachable = reachablePorts.Where(p => !p).ToList();
+      if (notReachable.Count == 0) {
+         logger.LogInformation($"Domain '{domain}' is reachable outside using ports 80 and 443");
+         return;
       }
       
-      if (isReadyForAcme) {
+      logger.LogWarning($"Domain '{domain}' unreachable, renewal is not possible");
+      var result = await checker.OpenPortAsync([
+            "Trying to perform port forwarding, please check the followings.",
+            "  1. UPnP is enabled on your network device",
+            "  2. No other computers is using port 80 and 443",
+            "[NOTE]",
+            " Some routers won't allow to open these ports by UPnP.",
+            " You can change them by logging into the routers web interface.",
+            "",
+            "Press any key to continue..." ],
+         10,
+         cancel
+      );
+      
+      if (result) {
          logger.LogInformation($"Domain '{domain}' renewal will be retried every 24 hours");
          _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
       }
