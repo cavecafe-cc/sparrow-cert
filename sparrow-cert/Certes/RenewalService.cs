@@ -102,38 +102,51 @@ public class RenewalService(
       }
    }
 
-   private async Task OnApplicationStarted(CancellationToken cancel) {
+   private async Task OnApplicationStarted(CancellationToken cancel, int waitSeconds = 10) {
       logger.LogInformation($"{nameof(RenewalService)} - started");
       
       var checker = new UPnPChecker(config.UPnP);
-      var domain = config.Domains.First();
-      var reachablePorts = checker.CheckPortsOpened(domain, [80, 443]);
-      var notReachable = reachablePorts.Where(p => !p).ToList();
+      var dpList = config.UPnP.PortMap!.Select(p => (p.Description, p.External)).ToList();
+      var portAvailabilities = checker.CheckPortsOpened(dpList);
+      var notReachable = new List<(string domain, int port)>();
+      var index = 0;
+      
+      foreach (var available in portAvailabilities) {
+         if (!available) {
+            var dp = dpList[index];
+            notReachable.Add(dp);
+            Console.WriteLine($"'{dp.Description}:{dp.External}' is not reachable");
+         }
+         index++;
+      }
+      
       if (notReachable.Count == 0) {
-         logger.LogInformation($"Domain '{domain}' is reachable outside using ports 80 and 443");
+         logger.LogInformation($"'{string.Join(",", dpList)}' is reachable from outside of your network");
          return;
       }
       
-      logger.LogWarning($"Domain '{domain}' unreachable, renewal is not possible");
-      var result = await checker.OpenPortAsync([
-            "Trying to perform port forwarding, please check the followings.",
-            "  1. UPnP is enabled on your network device",
-            "  2. No other computers is using port 80 and 443",
-            "[NOTE]",
-            " Some routers won't allow to open these ports by UPnP.",
-            " You can change them by logging into the routers web interface.",
-            "",
-            "Press any key to continue..." ],
-         10,
-         cancel
-      );
-      
-      if (result) {
-         logger.LogInformation($"Domain '{domain}' renewal will be retried every 24 hours");
-         _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
+      if (config.UPnP.Enabled) {
+         var notReachablePorts = notReachable.Select(p => p.port).ToList();
+         var result = await checker.OpenPortAsync([
+               "Trying to perform port forwarding, please check the followings.",
+               "  1. UPnP is enabled on your network device",
+               $"  2. No other computers are already using the ports {string.Join(',', notReachablePorts)}",
+               "[NOTE]",
+               " Some routers won't allow to open these ports by UPnP.",
+               " You can change them by logging into the routers web interface.",
+               "",
+               "Press any key to continue..." ],
+            waitSeconds,
+            cancel
+         );
+
+         if (result) {
+            logger.LogInformation("Successfully opened ports using UPnP");
+            _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
+         }
       }
       else {
-         logger.LogError("Renewal stopped. Please check the network configuration and try again");
+         logger.LogWarning("UPnP is disabled, renewal is not possible");
          await StopAsync(cancel);
       }
    }
