@@ -57,6 +57,7 @@ The service is configured through a `cert.json` file. Here is an example configu
   "KeyAlgorithm": 1,                          // 0: RSA256, 1: ES256, 2: ES384, 3: ES512
   "RenewalStartupDelay": "00:00:00",          // delay on startup before renewing
 
+  "WithHttpProxy": false,                     // default false, if enabled, it will use the HTTP proxy (port:443) for ACME challenge
   "HttpPort": 5080,                           // for NAT, customizable HTTP port (80 -> i.e. 5080)
   "HttpsPort": 5443,                          // for NAT, customizable HTTPS port (443 -> i.e. 5443)
   "CertFriendlyName": "own-domain.org",

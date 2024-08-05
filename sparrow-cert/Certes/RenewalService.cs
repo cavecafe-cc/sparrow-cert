@@ -107,7 +107,7 @@ public class RenewalService(
       
       var checker = new UPnPChecker(config.UPnP);
       var dpList = config.UPnP.PortMap!.Select(p => (p.Description, p.External)).ToList();
-      var portAvailabilities = checker.CheckPortsOpened(dpList);
+      var portAvailabilities = checker.CheckPortsOpened(dpList, config.WithHttpProxy, 4);
       var notReachable = new List<(string domain, int port)>();
       var index = 0;
       
@@ -115,7 +115,9 @@ public class RenewalService(
          if (!available) {
             var dp = dpList[index];
             notReachable.Add(dp);
-            logger.LogInformation($"{nameof(RenewalService)} '{dp.Description}:{dp.External}' is not reachable");
+            logger.LogInformation(config.WithHttpProxy ? 
+               $"{nameof(RenewalService)} '{dp.Description}' is not reachable via HTTP proxy port ({UPnPChecker.HTTP_PROXY_PORT})" 
+               : $"{nameof(RenewalService)} '{dp.Description}:{dp.External}' is not reachable");
          }
          index++;
       }

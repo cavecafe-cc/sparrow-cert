@@ -66,6 +66,8 @@ public class CertConfiguration {
       RenewalFailMode = config.GetValue<RenewalFailMode>("RenewalFailMode");
       KeyAlgorithm = config.GetValue<KeyAlgorithm>("KeyAlgorithm");
       RenewalStartupDelay = config.GetValue<TimeSpan>("RenewalStartupDelay");
+      
+      WithHttpProxy = config.GetValue<bool>("WithHttpProxy");
       HttpPort = config.GetValue<int>("HttpPort");
       HttpsPort = config.GetValue<int>("HttpsPort");
       CertFriendlyName = config.GetValue<string>("CertFriendlyName");
@@ -130,6 +132,8 @@ public class CertConfiguration {
    public RenewalFailMode RenewalFailMode { get; set; }
    public KeyAlgorithm KeyAlgorithm { get; set; }
    public TimeSpan RenewalStartupDelay { get; set; }
+   
+   public bool WithHttpProxy { get; set; }
    public int HttpPort { get; set; }
    public int HttpsPort { get; set; }
    public string CertFriendlyName { get; set; }
