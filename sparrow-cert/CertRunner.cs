@@ -33,6 +33,7 @@ public class CertRunner : IHostedService {
       #endregion
 
       host = new WebHostBuilder().UseKestrel(kso => {
+         Console.WriteLine($"{nameof(CertRunner)} using local ports http:{config.HttpPort}, https:{config.HttpsPort}");
          kso.ListenAnyIP(config.HttpPort);
          kso.ListenAnyIP(config.HttpsPort, lo => {
             lo.UseHttps(x509);
