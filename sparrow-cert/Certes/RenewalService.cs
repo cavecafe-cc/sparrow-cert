@@ -115,7 +115,7 @@ public class RenewalService(
          if (!available) {
             var dp = dpList[index];
             notReachable.Add(dp);
-            Console.WriteLine($"'{dp.Description}:{dp.External}' is not reachable");
+            logger.LogInformation($"{nameof(RenewalService)} '{dp.Description}:{dp.External}' is not reachable");
          }
          index++;
       }
