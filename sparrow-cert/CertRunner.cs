@@ -17,15 +17,22 @@ public class CertRunner : IHostedService {
    private readonly IWebHost host;
 
    public CertRunner(CertConfiguration cfg) {
-      Console.WriteLine($"{nameof(CertRunner)} ctor called");
+      const string tag = nameof(CertRunner);
+      Console.WriteLine($"{tag} ctor called");
       var config = cfg;
       
       #region check certificates
-      var certPath = Path.Combine(config.StorePath, $"{config.Domains.First()}.pfx");
+      Console.WriteLine($"{tag} checking certificates");
+      var pfx = $"{config.Domains.First()}.pfx";
+      Console.WriteLine($"{tag} looking for certificate '{pfx}'");
+      var certPath = Path.Combine(config.StorePath, pfx);
+      Console.WriteLine($"{tag} certPath='{certPath}'");
       var certExists = File.Exists(certPath);
+      Console.WriteLine($"{tag} certExists={certExists}");
       var x509 = certExists ? 
          new X509Certificate2(certPath, config.CertPwd) : 
          CertUtil.GenerateSelfSignedCertificate(config.Domains.First());
+
       var certValid = x509.NotBefore < DateTime.Now && x509.NotAfter > DateTime.Now;
       if (!certValid) {
          throw new InvalidConfigurationException("invalid certificate.");
