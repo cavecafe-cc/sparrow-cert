@@ -21,6 +21,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
 
    public async Task<PlacedOrder> PlaceOrder(string[] domains) {
       logger.LogInformation($"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
+
       var order = await acme.NewOrder(domains);
       var allAuthorizations = await order.Authorizations();
       var challengeContexts = await Task.WhenAll(allAuthorizations.Select(x => x.Http()));

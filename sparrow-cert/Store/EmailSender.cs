@@ -10,6 +10,7 @@ using SparrowCert.Certificates;
 namespace SparrowCert.Store;
 
 public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotify {
+   private const string tag = nameof(EmailSender);
    public void Dispose() {
       email = null;
    }
@@ -57,7 +58,7 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
          result = true;
       }
       catch (Exception e) {
-         Console.WriteLine($"Error sending email: {e.Message}");
+         Log.Catch(tag, "Error sending email", e);
       }
 
       return await Task.FromResult(result);

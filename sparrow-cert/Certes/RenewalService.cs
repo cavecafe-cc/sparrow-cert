@@ -21,6 +21,7 @@ public class RenewalService(
    ILogger<IRenewalService> logger,
    CertConfiguration config)
    : IRenewalService {
+   private const string tag = nameof(RenewalService);
    private readonly SemaphoreSlim _semaphore = new(1);
    private Timer _timer;
 
@@ -29,7 +30,7 @@ public class RenewalService(
    public Uri LetsEncryptUri => config.LetsEncryptUri;
 
    public async Task StartAsync(CancellationToken cancel) {
-      logger.LogTrace($"{nameof(RenewalService)} StartAsync");
+      logger.LogTrace($"{tag} StartAsync");
       foreach (var hook in hooks) {
          await hook.OnStartAsync();
       }
@@ -90,12 +91,12 @@ public class RenewalService(
 
    private async Task RunOnceWithErrorHandlingAsync() {
       try {
-         logger.LogTrace($"{nameof(RenewalService)} - timer callback starting");
+         logger.LogTrace($"{tag} - timer callback starting");
          await RunOnceAsync();
          _timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
       }
       catch (Exception e) when (config.RenewalFailMode != RenewalFailMode.Unhandled) {
-         logger.LogWarning(e, $"{nameof(RenewalService)} exception occurred renewing certificates: '{e.Message}'");
+         logger.LogWarning(e, $"{tag} exception occurred renewing certificates: '{e.Message}'");
          if (config.RenewalFailMode == RenewalFailMode.LogAndRetry) {
             _timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
          }
@@ -103,7 +104,7 @@ public class RenewalService(
    }
 
    private async Task OnApplicationStarted(CancellationToken cancel, int waitSeconds = 10) {
-      logger.LogInformation($"{nameof(RenewalService)} - started");
+      logger.LogInformation($"{tag} - started");
       
       var checker = new UPnPChecker(config.UPnP);
       var dpList = config.UPnP.PortMap!.Select(p => (p.Description, p.External)).ToList();
@@ -116,8 +117,8 @@ public class RenewalService(
             var dp = dpList[index];
             notReachable.Add(dp);
             logger.LogInformation(config.WithHttpProxy ? 
-               $"{nameof(RenewalService)} '{dp.Description}' is not reachable via HTTP proxy port ({UPnPChecker.HTTP_PROXY_PORT})" 
-               : $"{nameof(RenewalService)} '{dp.Description}:{dp.External}' is not reachable");
+               $"{tag} '{dp.Description}' is not reachable via HTTP proxy port ({UPnPChecker.HTTP_PROXY_PORT})"
+               : $"{tag} '{dp.Description}:{dp.External}' is not reachable");
          }
          index++;
       }

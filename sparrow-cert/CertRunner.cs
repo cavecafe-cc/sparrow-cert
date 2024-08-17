@@ -13,23 +13,26 @@ using SparrowCert.Certificates;
 namespace SparrowCert;
 
 public class CertRunner : IHostedService {
-   
+
+   const string tag = nameof(CertRunner);
    private readonly IWebHost host;
 
    public CertRunner(CertConfiguration cfg) {
-      const string tag = nameof(CertRunner);
-      Console.WriteLine($"{tag} ctor called");
+
+      Log.Info(tag, "ctor called");
       var config = cfg;
-      
+
       #region check certificates
-      Console.WriteLine($"{tag} checking certificates");
+      if (config.Domains == null || config.Domains.Count == 0) {
+         throw new InvalidConfigurationException("no domains found");
+      }
       var pfx = $"{config.Domains.First()}.pfx";
-      Console.WriteLine($"{tag} looking for certificate '{pfx}'");
+      Log.Info(tag, $"searching for '{pfx}'");
       var certPath = Path.Combine(config.StorePath, pfx);
-      Console.WriteLine($"{tag} certPath='{certPath}'");
       var certExists = File.Exists(certPath);
-      Console.WriteLine($"{tag} certExists={certExists}");
-      var x509 = certExists ? 
+      Log.Info(tag, (certExists ? $"cert found at '{certPath}'" : "no cert found, request to create one"));
+
+      var x509 = certExists ?
          new X509Certificate2(certPath, config.CertPwd) : 
          CertUtil.GenerateSelfSignedCertificate(config.Domains.First());
 
@@ -40,19 +43,21 @@ public class CertRunner : IHostedService {
       #endregion
 
       host = new WebHostBuilder().UseKestrel(kso => {
-         Console.WriteLine($"{nameof(CertRunner)} using local ports http:{config.HttpPort}, https:{config.HttpsPort}");
+         Log.Info(tag, "UseKestrel called",
+            $"using local ports http:{config.HttpPort}, https:{config.HttpsPort}");
          kso.ListenAnyIP(config.HttpPort);
          kso.ListenAnyIP(config.HttpsPort, lo => {
             lo.UseHttps(x509);
          });
       })
       .ConfigureServices(svc => {
-         Console.WriteLine($"{nameof(CertRunner)} ConfigureServices called");
+         Log.Info(tag, "ConfigureServices called");
          if (config == null) {
             throw new InvalidDataException("no configuration found");
          }
-         Console.WriteLine($"{nameof(CertRunner)} UseStaging='{config.UseStaging}'");
-         Console.WriteLine($"{nameof(CertRunner)} cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+         Log.Info(tag, $"UseStaging='{config.UseStaging}'");
+         Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+
          svc.AddSparrowCert(config);
          svc.AddSparrowCertFileCertStore(
             config.Notify,
@@ -65,7 +70,7 @@ public class CertRunner : IHostedService {
       })
       .Configure(app =>
       {
-         Console.WriteLine($"{nameof(CertRunner)} Configure called");
+         Log.Info(tag, "Configure called");
          app.UseSparrowCert();
       })
       .Build();
@@ -73,13 +78,13 @@ public class CertRunner : IHostedService {
    
    public async Task StartAsync(CancellationToken cancel)
    {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(StartAsync)} called");
+      Log.Info(tag, "starting ...");
       await host.StartAsync(cancel);
    }
 
    public async Task StopAsync(CancellationToken cancellationToken)
    {
-      Console.WriteLine($"{nameof(CertRunner)}:StopAsync called");
+      Log.Info(tag, "stopping ...");
       await host.StopAsync(cancellationToken);
    }
 }

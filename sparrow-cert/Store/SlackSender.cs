@@ -32,6 +32,7 @@ public class SlackFile {
 }
 
 public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify {
+   private const string tag = nameof(SlackSender);
    private string _domain { get; } = domain;
    private NotifyConfig.SlackConfig _slack { get; } = cfg;
 
@@ -58,7 +59,7 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify 
          return ret;
       }
       catch (Exception e) {
-         Console.WriteLine($"Error uploading file to slack: {e.Message}");
+         Log.Catch(tag, $"Error uploading file to slack", e);
       }
 
       return false;
@@ -121,7 +122,7 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify 
 
    private async Task<(bool ok, Dictionary<string, object> json)> IsSlackOK(HttpResponseMessage res, string message) {
       if (!res.IsSuccessStatusCode || res.ReasonPhrase != "OK") {
-         Console.WriteLine($"http error {message}: {res.ReasonPhrase}");
+         Log.Info(tag, $"http error {message}", $"{res.ReasonPhrase}");
          return (false, null);
       }
 
@@ -132,7 +133,7 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify 
 
       var slackJson = JsonSerializer.Deserialize<Dictionary<string, object>>(content);
       if (slackJson["ok"] != null && slackJson["ok"].ToString() == "True") return (true, slackJson);
-      Console.WriteLine($"slack error {message}: {slackJson["error"]}");
+      Log.Info(tag, $"slack error {message}", $"{slackJson["error"]}");
       return (false, null);
    }
 }

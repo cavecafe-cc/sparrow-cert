@@ -14,6 +14,7 @@ namespace SparrowCert.Certes;
 
 public class CertConfiguration {
    public const string JSON = "cert.json";
+   private const string tag = nameof(CertConfiguration);
    
    public static CertConfiguration Load(string configPath = "") {
       return new CertConfiguration(configPath);
@@ -34,7 +35,7 @@ public class CertConfiguration {
          return true;
       }
       catch (Exception e) {
-         Console.WriteLine($"Error saving configuration to '{path}': {e.Message}");
+         Log.Catch(tag, $"Saving configuration to '{path}'", e);
          return false;
       }
    }
@@ -98,16 +99,16 @@ public class CertConfiguration {
                   }
                   else {
                      sb.Append($"using existing one.");
-                     Console.WriteLine(sb.ToString());
+                     Log.Info(tag, sb.ToString());
                      return;
                   }
                }
                sb.Append($"Copying file '{f}' to '{filePath}'");
                File.Copy(f, filePath, overwrite);
-               Console.WriteLine(sb.ToString());
+               Log.Info(tag, sb.ToString());
             }
             catch (Exception e) {
-               Console.WriteLine($"Error copying file '{f}' to '{storePath}': {e.Message}");
+               Log.Catch(tag, $"Error copying file '{f}' to '{storePath}'", e);
             }
          });
       }

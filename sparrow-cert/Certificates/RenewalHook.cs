@@ -5,33 +5,33 @@ using SparrowCert.Certes;
 namespace SparrowCert;
 
 public class RenewalHook : IRenewalHook {
-   
+   private const string tag = nameof(RenewalHook);
    private readonly NotifyConfig notify;
    private readonly string[] domains;
 
    public RenewalHook(NotifyConfig notifyConfig, string[] domainNames) {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(RenewalHook)} ctor called");
+      Log.Info(tag, "ctor called" );
       notify = notifyConfig;
       domains = domainNames;
    }
    
    public virtual Task OnStartAsync() {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(RenewalHook)} started");
+      Log.Info(tag, $"{nameof(OnStartAsync)} called");;
       return Task.CompletedTask;
    }
 
    public virtual Task OnStopAsync() {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(RenewalHook)} stopped");
+      Log.Info(tag, $"{nameof(OnStopAsync)} called");
       return Task.CompletedTask;
    }
 
    public virtual Task OnRenewalSucceededAsync() {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(RenewalHook)} succeeded");
+      Log.Info(tag, $"{nameof(OnRenewalSucceededAsync)} called");;
       return Task.CompletedTask;
    }
 
    public virtual Task OnExceptionAsync(Exception e) {
-      Console.WriteLine($"{nameof(CertRunner)} {nameof(RenewalHook)} failed, err={e.Message}");
+      Log.Info(tag, $"{nameof(OnExceptionAsync)} called");
       return Task.CompletedTask;
    }
 }
