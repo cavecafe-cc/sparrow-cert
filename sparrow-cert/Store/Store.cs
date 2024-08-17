@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certes;
-using Microsoft.Extensions.Logging;
 using SparrowCert.Certificates;
 
 namespace SparrowCert.Store;
@@ -14,10 +12,11 @@ public enum CertType {
    PfxCert
 }
 
-internal class Store(
+internal partial class Store(
    IEnumerable<ICertStore> certStores,
-   IEnumerable<IChallengeStore> challengeStores,
-   ILogger<IStore> logger) : IStore {
+   IEnumerable<IChallengeStore> challengeStores) : IStore {
+
+   private const string tag = nameof(Store);
    private const string DnsChallengeNameFormat = "_acme-challenge.{0}";
    private const string WildcardRegex = @"^\*\.";
    public bool IsStaging { get; init; }
@@ -28,11 +27,11 @@ internal class Store(
 
    public async Task SaveCert(IStorableCert cert) {
       await SaveCert(CertType.PfxCert, cert, certStores);
-      logger.LogInformation("Certificate saved for later use.");
+      Log.Info(tag, $"Certificate saved for later use. Thumbprint: {cert.Thumbprint}");
    }
 
    public async Task SaveChallenges(ChallengeInfo[] challenges) {
-      logger.LogTrace($"Using ({challengeStores}) for saving challenge");
+      Log.Info(tag, $"Saving challenges {challenges}");
       await SaveChallenges(challenges, challengeStores);
    }
 
@@ -41,28 +40,27 @@ internal class Store(
    }
 
    private string GetChallengeDnsName(string domain) {
-      var dnsName = Regex.Replace(domain, WildcardRegex, String.Empty);
-      dnsName = String.Format(DnsChallengeNameFormat, dnsName);
+      var dnsName = MyRegex().Replace(domain, string.Empty);
+      dnsName = string.Format(DnsChallengeNameFormat, dnsName);
       return dnsName;
    }
 
    private async Task SaveCert(CertType type, IStorableCert cert, IEnumerable<ICertStore> stores) {
-      logger.LogTrace($"Saving {type} certificate in stores");
-
+      Log.Info(tag, $"Saving {type} certificate in stores");
       var tasks = stores.Select(store => store.Save(type, cert));
-
       await Task.WhenAll(tasks);
    }
 
    private async Task SaveChallenges(IEnumerable<ChallengeInfo> challenges, IEnumerable<IChallengeStore> stores) {
-      logger.LogTrace("Saving challenges ({challenges}) through stores.", challenges);
+      var challengeInfos = challenges.ToList();
+      Log.Info(tag, $"Saving challenges ({challengeInfos}) through stores.");
 
       var list = stores.ToList();
       if (list.Count == 0) {
-         logger.LogWarning("There are no challenges in stores - challenges will not be stored");
+         Log.Warn(tag, $"There are no challenge stores - challenges will not be stored");
       }
 
-      var tasks = list.Select(store => store.Save(challenges));
+      var tasks = list.Select(store => store.Save(challengeInfos));
       await Task.WhenAll(tasks);
    }
 
@@ -73,7 +71,7 @@ internal class Store(
             return certificate;
       }
 
-      logger.LogTrace($"Did not find any cert within stores [{string.Join(",", certStores)}].");
+      Log.Info(tag, $"Did not find any cert within stores [{string.Join(",", certStores)}].");
       return null;
    }
 
@@ -85,7 +83,7 @@ internal class Store(
          }
       }
 
-      logger.LogTrace($"Did not find private key with in stores [{string.Join(",", certStores)}].");
+      Log.Info(tag, $"Did not find private key with in stores [{string.Join(",", certStores)}].");
       return null;
    }
 
@@ -100,19 +98,23 @@ internal class Store(
       foreach (var strategy in values)
          result.AddRange(await strategy.Load());
 
-      if (!result.Any()) {
-         logger.LogWarning($"There are no saved challenges from stores {string.Join(",", values)}");
+      if (result.Count == 0) {
+         Log.Warn(tag, $"There are no saved challenges from stores {string.Join(",", values)}");
       }
       else {
-         logger.LogTrace($"Challenges {result} from stores");
+         Log.Info(tag, $"Challenges {result} from stores");
       }
 
       return result;
    }
 
    private async Task DeleteChallenges(IEnumerable<ChallengeInfo> challenges, IEnumerable<IChallengeStore> stores) {
-      logger.LogTrace("Deleting challenges {challenges} through stores.", challenges);
-      var tasks = stores.Select(store => store.Delete(challenges));
+      var challengeInfos = challenges.ToList();
+      Log.Info(tag, $"Deleting challenges {challengeInfos} through stores.");
+      var tasks = stores.Select(store => store.Delete(challengeInfos));
       await Task.WhenAll(tasks);
    }
+
+    [GeneratedRegex(WildcardRegex)]
+    private static partial Regex MyRegex();
 }

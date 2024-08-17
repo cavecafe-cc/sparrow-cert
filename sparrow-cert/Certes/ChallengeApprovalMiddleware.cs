@@ -8,8 +8,8 @@ namespace SparrowCert.Certes;
 
 public class ChallengeApprovalMiddleware(
    RequestDelegate next,
-   ILogger<IChallengeApprovalMiddleware> logger,
    IStore store) : IChallengeApprovalMiddleware {
+   private const string tag = nameof(ChallengeApprovalMiddleware);
    private const string AcmeChallengePathPrefix = "/.well-known/acme-challenge";
    private static readonly PathString AcmeChallengePrefixSegments = new(AcmeChallengePathPrefix);
 
@@ -23,13 +23,13 @@ public class ChallengeApprovalMiddleware(
 
    private async Task ProcessAcmeChallenge(HttpContext context) {
       var path = context.Request.Path.ToString();
-      logger.LogDebug("Challenge invoked: {challengePath} by {IpAddress}", path, context.Connection.RemoteIpAddress);
 
-      var requestedToken = path.Substring($"{AcmeChallengePathPrefix}/".Length);
+      Log.Info(tag, $"Challenge invoked: {path} by {context.Connection.RemoteIpAddress}");
+      var requestedToken = path[$"{AcmeChallengePathPrefix}/".Length..];
       var allChallenges = await store.GetChallenges();
       var matchingChallenge = allChallenges.FirstOrDefault(x => x.Token == requestedToken);
       if (matchingChallenge == null) {
-         logger.LogInformation("The given challenge did not match {challengePath} among {allChallenges}", path, allChallenges);
+         Log.Info(tag, $"The given challenge did not match {path} among {allChallenges}");
          await next(context);
          return;
       }

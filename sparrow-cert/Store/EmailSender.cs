@@ -9,7 +9,7 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert.Store;
 
-public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotify {
+public class EmailSender(NotifyConfig.EmailConfig email, string hostname) : INotify {
    private const string tag = nameof(EmailSender);
    public void Dispose() {
       email = null;
@@ -24,8 +24,8 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var fileName = type switch {
-            CertType.PrivateKey => $"{domain}-privkey.pem",
-            CertType.PfxCert => $"{domain}.pfx",
+            CertType.PrivateKey => $"{hostname}-privkey.pem",
+            CertType.PfxCert => $"{hostname}.pfx",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var smtp = new SmtpClient(email.SmtpHost, email.SmtpPort) {
@@ -39,19 +39,19 @@ public class EmailSender(NotifyConfig.EmailConfig email, string domain) : INotif
          using var memoryStream = new MemoryStream(data);
          mail.Attachments.Add(new Attachment(memoryStream, fileName));
          if (type == CertType.PfxCert) {
-            var pems = CertUtil.CreatePemFilesFromPfx(data, domain);
+            var pems = CertUtil.CreatePemFilesFromPfx(data, hostname);
 
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.chainPem));
-            mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-chain.pem"));
+            mail.Attachments.Add(new Attachment(memoryStream, $"{hostname}-chain.pem"));
 
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.certPem));
-            mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-cert.pem"));
+            mail.Attachments.Add(new Attachment(memoryStream, $"{hostname}-cert.pem"));
 
             memoryStream.Flush();
             _ = memoryStream.Read(Encoding.UTF8.GetBytes(pems.fullchainPem));
-            mail.Attachments.Add(new Attachment(memoryStream, $"{domain}-fullchain.pem"));
+            mail.Attachments.Add(new Attachment(memoryStream, $"{hostname}-fullchain.pem"));
          }
 
          smtp.Send(mail);

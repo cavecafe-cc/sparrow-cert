@@ -10,15 +10,17 @@ public interface ICertValidator {
 }
 
 public class CertValidator(
-   CertConfiguration options,
-   ILogger<CertValidator> logger) : ICertValidator {
+   CertConfiguration options) : ICertValidator {
+
+   private const string tag = nameof(CertValidator);
+
    public bool IsValid(ICert cert) {
       try {
          if (cert == null)
             return false;
 
          var now = DateTime.Now;
-         logger.LogTrace($"Validating cert UntilExpiry {options.RenewBeforeExpiry}, AfterIssue {options.RenewAfterIssued} - {cert}");
+         Log.Info(tag, $"Validating cert UntilExpiry {options.RenewBeforeExpiry}, AfterIssue {options.RenewAfterIssued} - {cert}");
          if (cert.NotAfter - now < options.RenewBeforeExpiry)
             return false;
 
@@ -28,7 +30,7 @@ public class CertValidator(
          return cert.NotBefore <= now && cert.NotAfter >= now;
       }
       catch (CryptographicException exc) {
-         logger.LogError(exc, "Exception occured during cert validation");
+         Log.Catch(tag, nameof(IsValid), exc);
          return false;
       }
    }

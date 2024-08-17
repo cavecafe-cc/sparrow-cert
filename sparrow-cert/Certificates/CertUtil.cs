@@ -9,6 +9,12 @@ namespace SparrowCert.Certificates;
 
 public abstract partial class CertUtil
 {
+   public static string GetDomainOrHostname(string domain) {
+      var parts = domain.Split('.');
+      if (parts.Length == 2) return domain;
+      return parts.Length > 2 ? parts[0] : domain;
+   }
+
    public static X509Certificate2 GenerateSelfSignedCertificate(string subjectName) {
       using var rsa = RSA.Create(2048);
       var req = new CertificateRequest($"CN={subjectName}", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -28,9 +34,9 @@ public abstract partial class CertUtil
 
       // (tk) todo - maybe have another flag in cert.json to decide to store them in the server or not
       // For now, it is not necessary as all operation is done in memory before sending them
-      File.WriteAllText($"{filePrefix}_chain.pem", chainPem);
-      File.WriteAllText($"{filePrefix}_cert.pem", certPem);
-      File.WriteAllText($"{filePrefix}_fullchain.pem", fullchainPem);
+      File.WriteAllText($"{filePrefix}-chain.pem", chainPem);
+      File.WriteAllText($"{filePrefix}-cert.pem", certPem);
+      File.WriteAllText($"{filePrefix}-fullchain.pem", fullchainPem);
 
       return (chainPem, certPem, fullchainPem);
    }

@@ -31,16 +31,16 @@ public class SlackFile {
    public string title { get; set; }
 }
 
-public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify {
+public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotify {
    private const string tag = nameof(SlackSender);
-   private string _domain { get; } = domain;
+   private string HostName { get; } = hostName;
    private NotifyConfig.SlackConfig _slack { get; } = cfg;
 
    public async Task<bool> Notify(CertType type, byte[] data) {
       try {
          var fileName = type switch {
-            CertType.PrivateKey => $"{_domain}-privkey.pem",
-            CertType.PfxCert => $"{_domain}.pfx",
+            CertType.PrivateKey => $"{HostName}-privkey.pem",
+            CertType.PfxCert => $"{HostName}.pfx",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
          var subject = type switch {
@@ -52,10 +52,10 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string domain) : INotify 
          var ret = await SendDataToSlack(data, fileName);
 
          if (type != CertType.PfxCert) return ret;
-         var pems = CertUtil.CreatePemFilesFromPfx(data, _domain);
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.chainPem), $"{_domain}-chain.pem");
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.certPem), $"{_domain}-cert.pem");
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.fullchainPem), $"{_domain}-fullchain.pem");
+         var pems = CertUtil.CreatePemFilesFromPfx(data, HostName);
+         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.chainPem), $"{HostName}-chain.pem");
+         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.certPem), $"{HostName}-cert.pem");
+         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.fullchainPem), $"{HostName}-fullchain.pem");
          return ret;
       }
       catch (Exception e) {

@@ -18,7 +18,6 @@ public class RenewalService(
    ICertProvider provider,
    IEnumerable<IRenewalHook> hooks,
    IHostApplicationLifetime lifetime,
-   ILogger<IRenewalService> logger,
    CertConfiguration config)
    : IRenewalService {
    private const string tag = nameof(RenewalService);
@@ -30,7 +29,7 @@ public class RenewalService(
    public Uri LetsEncryptUri => config.LetsEncryptUri;
 
    public async Task StartAsync(CancellationToken cancel) {
-      logger.LogTrace($"{tag} StartAsync");
+      Log.Info(tag, $"StartAsync called");
       foreach (var hook in hooks) {
          await hook.OnStartAsync();
       }
@@ -39,7 +38,7 @@ public class RenewalService(
    }
 
    public async Task StopAsync(CancellationToken cancelToken) {
-      logger.LogWarning("The LetsEncrypt middleware's background renewal thread is shutting down.");
+      Log.Warn(tag, "StopAsync called");
       _timer?.Change(Timeout.Infinite, 0);
 
       foreach (var hook in hooks)
@@ -62,11 +61,10 @@ public class RenewalService(
 
             if (result.Cert is LetsEncryptX509Cert x509cert) {
                if (chain.Build(x509cert.GetCertificate())) {
-                  logger.LogInformation("Successfully built certificate chain");
+                  Log.Info(tag, $"Successfully built certificate chain for {x509cert.GetCertificate().Subject}");
                }
                else {
-                  logger.LogWarning(
-                     "Was not able to build certificate chain. This can cause an outage of your app.");
+                  Log.Warn(tag, $"Certificate chain build failed for {x509cert.GetCertificate().Subject}");
                }
             }
          }
@@ -91,12 +89,12 @@ public class RenewalService(
 
    private async Task RunOnceWithErrorHandlingAsync() {
       try {
-         logger.LogTrace($"{tag} - timer callback starting");
+         Log.Info(tag, "Checking renewal required ...");
          await RunOnceAsync();
          _timer?.Change(TimeSpan.FromHours(1), TimeSpan.FromHours(1));
       }
       catch (Exception e) when (config.RenewalFailMode != RenewalFailMode.Unhandled) {
-         logger.LogWarning(e, $"{tag} exception occurred renewing certificates: '{e.Message}'");
+         Log.Catch(tag, nameof(RunOnceWithErrorHandlingAsync), e);
          if (config.RenewalFailMode == RenewalFailMode.LogAndRetry) {
             _timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
          }
@@ -104,7 +102,7 @@ public class RenewalService(
    }
 
    private async Task OnApplicationStarted(CancellationToken cancel, int waitSeconds = 10) {
-      logger.LogInformation($"{tag} - started");
+      Log.Info(tag, "OnApplicationStarted called");
       
       var checker = new UPnPChecker(config.UPnP);
       var dpList = config.UPnP.PortMap!.Select(p => (p.Description, p.External)).ToList();
@@ -116,15 +114,15 @@ public class RenewalService(
          if (!available) {
             var dp = dpList[index];
             notReachable.Add(dp);
-            logger.LogInformation(config.WithHttpProxy ? 
-               $"{tag} '{dp.Description}' is not reachable via HTTP proxy port ({UPnPChecker.HTTP_PROXY_PORT})"
-               : $"{tag} '{dp.Description}:{dp.External}' is not reachable");
+            Log.Info(tag, config.WithHttpProxy ?
+               $"'{dp.Description}' is not reachable via HTTP proxy port ({UPnPChecker.HTTP_PROXY_PORT})"
+               : $"'{dp.Description}:{dp.External}' is not reachable");
          }
          index++;
       }
       
       if (notReachable.Count == 0) {
-         logger.LogInformation($"'{string.Join(",", dpList)}' is reachable from outside of your network");
+         Log.Info(tag, $"All ports ({string.Join(",", dpList)}) are reachable, starting renewal service");
          return;
       }
       
@@ -144,17 +142,18 @@ public class RenewalService(
          );
 
          if (result) {
-            logger.LogInformation("Successfully opened ports using UPnP");
+            Log.Info(tag, "Successfully opened ports using UPnP");
             _timer?.Change(config.RenewalStartupDelay, TimeSpan.FromDays(1));
          }
       }
       else {
-         logger.LogWarning("UPnP is disabled, renewal is not possible");
+         Log.Warn(tag, "UPnP is disabled, renewal is not possible");
          await StopAsync(cancel);
       }
    }
 
    public void Dispose() {
+      Log.Info(tag, "Dispose called");
       _timer?.Dispose();
    }
 }

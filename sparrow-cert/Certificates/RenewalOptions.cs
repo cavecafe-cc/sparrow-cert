@@ -6,13 +6,13 @@ using SparrowCert.Certificates;
 
 namespace SparrowCert;
 
-internal class RenewalOptions(ILogger<RenewalOptions> logger) : IConfigureOptions<KestrelServerOptions> {
+internal class RenewalOptions() : IConfigureOptions<KestrelServerOptions> {
    public void Configure(KestrelServerOptions options) {
       if (RenewalService.Cert is LetsEncryptX509Cert x509Cert) {
          options.ConfigureHttpsDefaults(o => { o.ServerCertificateSelector = (_a, _b) => x509Cert.GetCertificate(); });
       }
       else if (RenewalService.Cert != null) {
-         logger.LogError("This cert cannot be used with Kestrel");
+         Log.Error(nameof(RenewalOptions), "This cert cannot be used with Kestrel");
       }
    }
 }

@@ -15,12 +15,13 @@ public interface ILetsEncryptClient {
    Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder);
 }
 
-public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILogger logger) : ILetsEncryptClient {
+public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : ILetsEncryptClient {
+   private const string tag = nameof(LetsEncryptClient);
    private string CertFriendlyName => (
       string.IsNullOrWhiteSpace(options.CertFriendlyName) ? options.Domains.First() : options.CertFriendlyName);
 
    public async Task<PlacedOrder> PlaceOrder(string[] domains) {
-      logger.LogInformation($"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
+      Log.Info(tag, $"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
 
       var order = await acme.NewOrder(domains);
       var allAuthorizations = await order.Authorizations();
@@ -32,8 +33,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
          Domains = domains
       }).ToArray();
 
-      logger.LogTrace($"LetsEncrypt placed order for domains {domains} with challenges {challenges}");
-
+      Log.Info(tag, $"LetsEncrypt placed order for domains {domains} with challenges {challenges}");
       return new PlacedOrder(challenges, order, nonNullChallengeContexts);
    }
 
@@ -44,13 +44,13 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
    }
 
    private async Task ValidateChallenges(IChallengeContext[] contexts) {
-      logger.LogInformation("Validating all pending order authorizations.");
+      Log.Info(tag, "Validating all pending order authorizations.");
 
       var responses = await ValidateChallengesAsync(contexts);
       var notEmptyResponses = responses.Where(challenge => challenge != null).ToArray();
 
       if (responses.Length > notEmptyResponses.Length)
-         logger.LogWarning("Some challenge responses were null.");
+         Log.Warn(tag, "Some challenge responses were null.");
 
       var exceptions = notEmptyResponses
          .Where(c => c.Status == ChallengeStatus.Invalid)
@@ -64,8 +64,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
    }
 
    private async Task<byte[]> AcquireCertificateBytesFromOrderAsync(IOrderContext order) {
-      logger.LogInformation("Acquiring certificate through signing request.");
-
+      Log.Info(tag, nameof(AcquireCertificateBytesFromOrderAsync), "Generating key pair for certificate signing request.");
       var keyPair = KeyFactory.NewKey(options.KeyAlgorithm);
       var req = options.CertSigningRequest;
       var csrInfo = new CsrInfo {
@@ -81,7 +80,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options, ILo
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;
       var pfxBytes = pfxBuilder.Build(CertFriendlyName, options.CertPwd);
-      logger.LogInformation($"'{CertFriendlyName}' certificate acquired.");
+      Log.Info(tag, $"Certificate acquired for {CertFriendlyName}.");
       return pfxBytes;
    }
 

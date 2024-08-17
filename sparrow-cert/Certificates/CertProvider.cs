@@ -8,11 +8,12 @@ using SparrowCert.Store;
 namespace SparrowCert.Certificates;
 
 public class CertProvider : ICertProvider {
+
+   private const string tag = nameof(CertProvider);
    private readonly IStore _store;
    private readonly CertConfiguration _options;
    private readonly ILetsEncryptClientFactory _factory;
    private readonly ICertValidator _validator;
-   private readonly ILogger<CertProvider> _logger;
 
    private readonly string[] _domains;
 
@@ -20,8 +21,7 @@ public class CertProvider : ICertProvider {
       CertConfiguration options,
       ICertValidator validator,
       IStore store,
-      ILetsEncryptClientFactory factory,
-      ILogger<CertProvider> logger) {
+      ILetsEncryptClientFactory factory) {
       var domains = options.Domains?.Distinct().ToArray();
       if (domains == null || domains.Length == 0) {
          throw new ArgumentException("Invalid domains configuration");
@@ -32,7 +32,6 @@ public class CertProvider : ICertProvider {
       _store = store;
       _factory = factory;
       _validator = validator;
-      _logger = logger;
    }
 
    private string PrintCertInfo(ICert cert) {
@@ -44,24 +43,21 @@ public class CertProvider : ICertProvider {
    }
 
    public async Task<RenewalResult> RenewIfNeeded(ICert current = null) {
-      _logger.LogInformation("Checking renewal required ...");
+      Log.Info(tag, "Checking renewal required ...");
       if (_validator.IsValid(current)) {
-         _logger.LogInformation(
-            $"Current cert is valid. Renewal not required.{PrintCertInfo(current)}");
+         Log.Info(tag, $"Current cert is valid. Renewal not required.{PrintCertInfo(current)}");
          return new RenewalResult(current, RenewalStatus.Unchanged);
       }
 
-      _logger.LogInformation("Checking saved certs ...");
+      Log.Info(tag, "Checking saved certs ...");
       var fromStored = await _store.GetCert(_options.CertPwd);
       if (_validator.IsValid(fromStored)) {
-         _logger.LogInformation(
-            $"A stored & not expired cert was found and will be used{PrintCertInfo(fromStored)}");
+         Log.Info(tag, $"A stored & not expired cert was found and will be used{PrintCertInfo(fromStored)}");
          return new RenewalResult(fromStored, RenewalStatus.LoadedFromStore);
       }
-
-      _logger.LogInformation("No valid certificate was found. Requesting new certificate from LetsEncrypt.");
+      Log.Info(tag, "No valid cert found, requesting new certificate from LetsEncrypt ...");
       var newCert = await RequestNewCert();
-      _logger.LogInformation($"New certificate was issued{PrintCertInfo(newCert)}");
+      Log.Info(tag, $"New certificate was issued{PrintCertInfo(newCert)}");
       return new RenewalResult(newCert, RenewalStatus.Renewed);
    }
 

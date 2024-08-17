@@ -11,7 +11,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
    private NotifyConfig _notify { get; init; } = notify;
 
    public Task Save(CertType type, IStorableCert cert) {
-      var path = GetPath(type);
+      var path = GetFilePath(type);
       lock (typeof(FileCertStore)) {
          File.WriteAllBytes(path, cert.RawData);
       }
@@ -38,19 +38,19 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
 
    private Task<byte[]> ReadFile(CertType type) {
       lock (typeof(FileCertStore)) {
-         var path = GetPath(type);
+         var path = GetFilePath(type);
          var ret = !File.Exists(path) ? null : File.ReadAllBytes(path);
          return Task.FromResult(ret);
       }
    }
 
-   private string GetPath(CertType type) {
+   private string GetFilePath(CertType type) {
       var fileEnding = type switch {
-         CertType.PrivateKey => ("privkey.pem"),
+         CertType.PrivateKey => ("-privkey.pem"),
          CertType.PfxCert => (".pfx"),
          _ => throw new NotSupportedException()
       };
-      return Path.Combine(basePath, filePrefix + "_" + fileEnding);
+      return Path.Combine(basePath, filePrefix + fileEnding);
    }
 
    public async Task<bool> NotifyCert(CertType type, byte[] data) {

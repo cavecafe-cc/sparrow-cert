@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using SparrowCert.Certes;
@@ -16,6 +17,7 @@ public class CertRunner : IHostedService {
 
    const string tag = nameof(CertRunner);
    private readonly IWebHost host;
+   private static bool IsSelfSigned = false;
 
    public CertRunner(CertConfiguration cfg) {
 
@@ -26,15 +28,20 @@ public class CertRunner : IHostedService {
       if (config.Domains == null || config.Domains.Count == 0) {
          throw new InvalidConfigurationException("no domains found");
       }
-      var pfx = $"{config.Domains.First()}.pfx";
+
+      var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
+      var pfx = $"{hostName}.pfx";
       Log.Info(tag, $"searching for '{pfx}'");
       var certPath = Path.Combine(config.StorePath, pfx);
       var certExists = File.Exists(certPath);
       Log.Info(tag, (certExists ? $"cert found at '{certPath}'" : "no cert found, request to create one"));
 
+      // if no certificate found, create a self-signed certificate
       var x509 = certExists ?
          new X509Certificate2(certPath, config.CertPwd) : 
          CertUtil.GenerateSelfSignedCertificate(config.Domains.First());
+
+      IsSelfSigned = !certExists;
 
       var certValid = x509.NotBefore < DateTime.Now && x509.NotAfter > DateTime.Now;
       if (!certValid) {
@@ -63,9 +70,9 @@ public class CertRunner : IHostedService {
             config.Notify,
             config.UseStaging,
             config.StorePath,
-            config.Domains.First()
+            hostName
          );
-         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, config.Domains.First());
+         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
          svc.AddSparrowCertRenewalHook(config.Notify, config.Domains);
       })
       .Configure(app =>
@@ -79,6 +86,11 @@ public class CertRunner : IHostedService {
    public async Task StartAsync(CancellationToken cancel)
    {
       Log.Info(tag, "starting ...");
+
+      if (IsSelfSigned) {
+         Log.Info(tag, $"IsSelfSigned={IsSelfSigned}, calling RunOnceAsync");
+         await host.Services.GetRequiredService<IRenewalService>().RunOnceAsync();
+      }
       await host.StartAsync(cancel);
    }
 
@@ -87,4 +99,5 @@ public class CertRunner : IHostedService {
       Log.Info(tag, "stopping ...");
       await host.StopAsync(cancellationToken);
    }
+
 }
