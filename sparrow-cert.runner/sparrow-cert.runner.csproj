@@ -22,7 +22,7 @@
     <PackageReference Include="Certes" Version="3.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Server.WebListener" Version="1.1.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.8" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 
