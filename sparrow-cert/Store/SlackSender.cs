@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -49,13 +47,13 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
          };
 
-         var ret = await SendDataToSlack(data, fileName);
+         var ret = await SendDataToSlack(subject, data, fileName);
 
          if (type != CertType.PfxCert) return ret;
          var pems = CertUtil.CreatePemFilesFromPfx(data, HostName);
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.chainPem), $"{HostName}-chain.pem");
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.certPem), $"{HostName}-cert.pem");
-         ret = await SendDataToSlack(Encoding.UTF8.GetBytes(pems.fullchainPem), $"{HostName}-fullchain.pem");
+         ret = await SendDataToSlack("cert chain",Encoding.UTF8.GetBytes(pems.chainPem), $"{HostName}-chain.pem");
+         ret = await SendDataToSlack("cert",Encoding.UTF8.GetBytes(pems.certPem), $"{HostName}-cert.pem");
+         ret = await SendDataToSlack("fullchain", Encoding.UTF8.GetBytes(pems.fullchainPem), $"{HostName}-fullchain.pem");
          return ret;
       }
       catch (Exception e) {
@@ -69,7 +67,7 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
       // nothing to dispose so far
    }
 
-   private async Task<bool> SendDataToSlack(byte[] data, string fileName) {
+   private async Task<bool> SendDataToSlack(string subject, byte[] data, string fileName) {
       using var client = new HttpClient();
       client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _slack.Token);
 
@@ -83,7 +81,10 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
       var url = $"https://slack.com/api/files.getUploadURLExternal?{queryString}";
       var res = await client.GetAsync(url);
       var slack = await IsSlackOK(res, "files.getUploadURLExternal");
-      if (!slack.ok) return false;
+      if (!slack.ok) {
+         Log.Warn(tag, $"failed to get upload url", $"{fileName}");
+         return false;
+      }
 
       #endregion
 
@@ -94,7 +95,10 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
       using var uploadData = new ByteArrayContent(data);
       res = await client.PostAsync(uploadUrl, uploadData);
       slack = await IsSlackOK(res, "upload file");
-      if (!slack.ok) return false;
+      if (!slack.ok) {
+         Log.Warn(tag, $"failed to upload file", $"{fileName}");
+         return false;
+      }
 
       #endregion
 
@@ -103,7 +107,10 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
       url = "https://slack.com/api/files.completeUploadExternal";
       @params = new SlackParams {
          { "channel_id", string.Join(',', _slack.Channels) },
-         { "initial_comment", _slack.Body }
+         { "initial_comment", _slack.Body },
+         // { "file_id", fileId },
+         // { "file_name", fileName },
+         // { "title", subject }
       };
 
       var files = new SlackFile[] {
@@ -114,7 +121,9 @@ public class SlackSender(NotifyConfig.SlackConfig cfg, string hostName) : INotif
       var encodedContent = new FormUrlEncodedContent(@params);
       res = await client.PostAsync(url, encodedContent);
       slack = await IsSlackOK(res, "files.completeUploadExternal");
-
+      if (!slack.ok) {
+         Log.Warn(tag, "failed to complete file uploaded", $"{fileName}");
+      }
       return slack.ok;
 
       #endregion

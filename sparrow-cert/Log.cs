@@ -1,23 +1,31 @@
 #nullable enable
 using System;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SparrowCert;
 
-public class Log {
-
-   private abstract class Const {
-      public static readonly JsonSerializerOptions JsonOptions = new() {
-         IgnoreReadOnlyFields = true,
-         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-         WriteIndented = true
-      };
-
-   }
+public abstract class Log {
 
    public static void Info(string tag = "", string title = "", string message = "") {
       WriteLine(tag, title, message);
+   }
+
+   public static void MaskedInfo(string tag = "", string title = "", string msgToBeMasked = "") {
+      WriteLine(tag, title, Mask(msgToBeMasked));
+   }
+
+   public static string Mask(string s) {
+      if (string.IsNullOrWhiteSpace(s)) {
+         return s;
+      }
+      var len = s.Length;
+      return len switch {
+         < 4 => s,
+         > 12 => MaskMiddle(s),
+         _ => MaskRemoveMiddleWithSize(s)
+      };
    }
 
    public static void Debug(string tag = "", string title = "", string message = "") {
@@ -57,7 +65,7 @@ public class Log {
       }
    }
 
-   private static void WriteLine(string tag = "", string func = "", string msg = "") {
+   private static void WriteLine(string tag = "", string title = "", string msg = "") {
       var now = "****";
       try {
          now = DateTime.Now.ToString("u");
@@ -67,29 +75,75 @@ public class Log {
       }
 
       if (string.IsNullOrEmpty(tag)) {
-         if (string.IsNullOrEmpty(func)) {
+         if (string.IsNullOrEmpty(title)) {
             Console.WriteLine($"{now} {msg}");
             return;
          }
-         Console.WriteLine($"{now} {func}: {msg}");
+         if (string.IsNullOrEmpty(msg)) {
+            Console.WriteLine($"{now} {title}");
+            return;
+         }
+         Console.WriteLine($"{now} {title}: {msg}");
       }
       else {
-         if (string.IsNullOrEmpty(func)) {
+         if (string.IsNullOrEmpty(title)) {
             Console.WriteLine($"{now} [{tag}] {msg}");
             return;
          }
-         Console.WriteLine($"{now} [{tag}] {func}: {msg}");
+         if (string.IsNullOrEmpty(msg)) {
+            Console.WriteLine($"{now} [{tag}] {title}");
+            return;
+         }
+         Console.WriteLine($"{now} [{tag}] {title}: {msg}");
       }
    }
 
-   public static void ShowJson(string tag, string title, object? o) {
+   public static void ShowJson(string tag, string title, object? o, bool mask = false) {
       var now = DateTime.Now.ToString("u");
       if (o == null) {
          Console.WriteLine($"{now} {tag} {title}: null\n");
          return;
       }
-
-      Console.WriteLine($"{now} {tag} {title}:\n{JsonSerializer.Serialize(o, Const.JsonOptions)}\n");
+      var json = JsonSerializer.Serialize(o, mask ? Const.JsonMaskedOptions : Const.JsonOptions);
+      Console.WriteLine($"{now} {tag} {title}:\n{json}\n");
    }
 
+   #region Private
+
+   private static string MaskRemoveMiddleWithSize(string s) {
+      var sb = new StringBuilder(s.Length);
+      sb.Append($"size({s.Length}): ");
+      sb.Append(s[0]);
+      sb.Append(s[1]);
+      sb.Append(s[2]);
+      sb.Append(s[3]);
+      for (var i = 4; i < s.Length - 4; i++) {
+         sb.Append('.');
+      }
+      sb.Append(s[^4]);
+      sb.Append(s[^3]);
+      sb.Append(s[^2]);
+      sb.Append(s[^1]);
+      return sb.ToString();
+   }
+
+   private static string MaskMiddle(string s) {
+      var sb = new StringBuilder(s.Length);
+      sb.Append(s[0]);
+      sb.Append(s[1]);
+      sb.Append(s[2]);
+      sb.Append(s[3]);
+      for (var i = 4; i < s.Length - 4; i++) {
+         sb.Append('*');
+      }
+      sb.Append(s[^4]);
+      sb.Append(s[^3]);
+      sb.Append(s[^2]);
+      sb.Append(s[^1]);
+      return sb.ToString();
+   }
+
+
+
+   #endregion
 }

@@ -83,7 +83,7 @@ internal partial class Store(
          }
       }
 
-      Log.Info(tag, $"Did not find private key with in stores [{string.Join(",", certStores)}].");
+      Log.Info(tag, $"no privkey with in stores [{string.Join(",", certStores)}].");
       return null;
    }
 

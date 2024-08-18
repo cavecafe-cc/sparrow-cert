@@ -7,12 +7,14 @@ using SparrowCert.Certificates;
 namespace SparrowCert.Store;
 
 public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath, string filePrefix) : ICertStore {
+   private const string tag = nameof(FileCertStore);
    public bool IsStaging { get; init; } = isStaging;
    private NotifyConfig _notify { get; init; } = notify;
 
    public Task Save(CertType type, IStorableCert cert) {
       var path = GetFilePath(type);
       lock (typeof(FileCertStore)) {
+         Log.Info(tag, $"Saving {type} certificate to {path}");
          File.WriteAllBytes(path, cert.RawData);
       }
 
@@ -20,7 +22,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
          _ = NotifyCert(type, cert.RawData);
       }
       else {
-         Console.Error.WriteLine($"No 'notify' setup for {type}");
+         Log.Error(tag, $"No 'notify' setup for {type}");
       }
 
       return Task.CompletedTask;
@@ -39,6 +41,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
    private Task<byte[]> ReadFile(CertType type) {
       lock (typeof(FileCertStore)) {
          var path = GetFilePath(type);
+         Log.Info(tag, $"Try get {type} certificate from {path}");
          var ret = !File.Exists(path) ? null : File.ReadAllBytes(path);
          return Task.FromResult(ret);
       }
