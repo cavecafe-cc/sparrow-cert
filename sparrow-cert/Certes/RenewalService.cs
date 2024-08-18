@@ -77,9 +77,10 @@ public class RenewalService(
          }
       }
       catch (Exception ex) {
-         foreach (var hook in hooks)
+         Log.Catch(tag, nameof(RunOnceAsync), ex);
+         foreach (var hook in hooks) {
             await hook.OnExceptionAsync(ex);
-
+         }
          throw;
       }
       finally {
