@@ -48,41 +48,43 @@ public class CertRunner : IHostedService {
       }
       #endregion
 
-      certHost = new WebHostBuilder().UseKestrel(kso => {
-         Log.Info(tag, "UseKestrel",
-            $"ports http:{config.HttpPort}, https:{config.HttpsPort}");
-         kso.ListenAnyIP(config.HttpPort);
-         kso.ListenAnyIP(config.HttpsPort, lo => {
-            lo.UseHttps(x509);
-         });
-      })
-      .ConfigureServices(sevices => {
-         Log.Info(tag, "ConfigureServices called");
-         if (config == null) {
-            throw new InvalidDataException("no configuration found");
-         }
-         Log.Info(tag, $"UseStaging='{config.UseStaging}'");
-         Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+      certHost = new WebHostBuilder()
+         .UseKestrel(kso => {
+            Log.Info(tag, "UseKestrel",
+               $"ports http:{config.HttpPort}, https:{config.HttpsPort}");
+            kso.ListenAnyIP(config.HttpPort);
+            kso.ListenAnyIP(config.HttpsPort, lo => {
+               lo.UseHttps(x509);
+            });
+         })
+         .UseUrls($"http://*:{config.HttpPort}", $"https://*:{config.HttpsPort}")
+         .ConfigureServices(sevices => {
+            Log.Info(tag, "ConfigureServices called");
+            if (config == null) {
+               throw new InvalidDataException("no configuration found");
+            }
+            Log.Info(tag, $"UseStaging='{config.UseStaging}'");
+            Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
 
-         sevices.AddSparrowCert(config);
-         sevices.AddSparrowCertFileCertStore(
-            config.Notify,
-            config.UseStaging,
-            config.StorePath,
-            hostName
-         );
-         sevices.Configure<HostOptions>(option => {
-            option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
-         });
-         sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
-         sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
-      })
-      .Configure(app =>
-      {
-         Log.Info(tag, "Configure called");
-         app.UseSparrowCert();
-      })
-      .Build();
+            sevices.AddSparrowCert(config);
+            sevices.AddSparrowCertFileCertStore(
+               config.Notify,
+               config.UseStaging,
+               config.StorePath,
+               hostName
+            );
+            sevices.Configure<HostOptions>(option => {
+               option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+            });
+            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
+            sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
+         })
+         .Configure(app =>
+         {
+            Log.Info(tag, "Configure called");
+            app.UseSparrowCert();
+         })
+         .Build();
    }
    
    public async Task StartAsync(CancellationToken cancel) {
