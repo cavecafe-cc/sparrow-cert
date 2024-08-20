@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
-using Microsoft.Extensions.Logging;
+using SparrowCert.Certificates;
 using SparrowCert.Exceptions;
 using SparrowCert.Store;
 
@@ -17,8 +17,10 @@ public interface ILetsEncryptClient {
 
 public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : ILetsEncryptClient {
    private const string tag = nameof(LetsEncryptClient);
-   private string CertFriendlyName => (
-      string.IsNullOrWhiteSpace(options.CertFriendlyName) ? options.Domains.First() : options.CertFriendlyName);
+   private string CertAlias =>
+      string.IsNullOrWhiteSpace(options.CertAlias) ?
+         CertUtil.GetDomainOrHostname(options.Domains.First()) :
+         options.CertAlias;
 
    public async Task<PlacedOrder> PlaceOrder(string[] domains) {
       Log.Info(tag, $"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
@@ -33,7 +35,8 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : I
          Domains = domains
       }).ToArray();
 
-      Log.Info(tag, $"LetsEncrypt placed order for domains {domains} with challenges {challenges}");
+      var domainStr = domains.Length == 1 ? domains[0] : $"[{string.Join(',', domains)}]";
+      Log.Info(tag, $"LetsEncrypt placed order for domains {domainStr} with challenges {challenges}");
       return new PlacedOrder(challenges, order, nonNullChallengeContexts);
    }
 
@@ -79,8 +82,8 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : I
       var certificateChain = await order.Generate(csrInfo, keyPair);
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;
-      var pfxBytes = pfxBuilder.Build(CertFriendlyName, options.CertPwd);
-      Log.Info(tag, $"Certificate acquired for {CertFriendlyName}.");
+      var pfxBytes = pfxBuilder.Build(CertAlias, options.CertPwd);
+      Log.Info(tag, $"Certificate acquired for {CertAlias}.");
       return pfxBytes;
    }
 

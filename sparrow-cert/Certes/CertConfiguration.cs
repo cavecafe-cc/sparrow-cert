@@ -9,6 +9,7 @@ using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
 using Sparrow.UPnP;
+using SparrowCert.Certificates;
 
 namespace SparrowCert.Certes;
 
@@ -71,22 +72,23 @@ public class CertConfiguration {
       WithHttpProxy = config.GetValue<bool>("WithHttpProxy");
       HttpPort = config.GetValue<int>("HttpPort");
       HttpsPort = config.GetValue<int>("HttpsPort");
-      CertFriendlyName = config.GetValue<string>("CertFriendlyName");
-      CertFriendlyName = string.IsNullOrWhiteSpace(CertFriendlyName) ? Domains.First() : CertFriendlyName;
+      CertAlias = config.GetValue<string>("CertAlias");
+      var hostName = CertUtil.GetDomainOrHostname(Domains.First());
+      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
       StorePath = config.GetValue<string>("StorePath");
-      CopyCertFiles(StorePath, configPath, Domains.First(), [ "*.pfx", "*.json", "*.pem" ]);
+      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ]);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
    }
 
    // Copy the files with the given extensions to the store path
-   private void CopyCertFiles(string storePath, string configPath, string domain, string[] extensions, bool overwrite = false) {
+   private void CopyCertFiles(string storePath, string configPath, string hostName, string[] extensions, bool overwrite = false) {
       if (string.IsNullOrWhiteSpace(storePath) || !Directory.Exists(storePath)) return;
       foreach (var ext in extensions) {
          if (string.IsNullOrWhiteSpace(ext)) continue;
          var dir = Path.GetDirectoryName(configPath);
          if (dir == null) continue;
-         var files = Directory.GetFiles(dir, $"{domain}{ext}");
+         var files = Directory.GetFiles(dir, $"{hostName}{ext}");
          files.ToList().ForEach(f => {
             try {
                StringBuilder sb = new();
@@ -137,7 +139,7 @@ public class CertConfiguration {
    public bool WithHttpProxy { get; set; }
    public int HttpPort { get; set; }
    public int HttpsPort { get; set; }
-   public string CertFriendlyName { get; set; }
+   public string CertAlias { get; set; }
    public string StorePath { get; set; }
    public string CertPwd { get; set; }
    public NotifyConfig Notify { get; set; }

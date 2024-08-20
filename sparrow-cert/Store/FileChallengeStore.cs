@@ -47,6 +47,6 @@ public class FileChallengeStore(string basePath, string filePrefix) : IChallenge
    }
 
    private string GetPath() {
-      return Path.Combine(basePath, filePrefix + "_challenges.json");
+      return Path.Combine(basePath, filePrefix + "-challenges.json");
    }
 }

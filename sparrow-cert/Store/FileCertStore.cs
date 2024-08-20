@@ -14,6 +14,7 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
    public Task Save(CertType type, IStorableCert cert) {
       var path = GetFilePath(type);
       lock (typeof(FileCertStore)) {
+         Directory.CreateDirectory(basePath);
          Log.Info(tag, $"Saving {type} certificate to {path}");
          File.WriteAllBytes(path, cert.RawData);
       }
@@ -57,7 +58,12 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
    }
 
    public async Task<bool> NotifyCert(CertType type, byte[] data) {
-      if (_notify == null) return false;
+      const string func = nameof(NotifyCert);
+      Log.Entry(tag, func);
+      if (_notify == null) {
+         Log.Warn(tag, func, "No notify configuration found");
+         return false;
+      }
       var ret = false;
       if (_notify.Slack is { Enabled: true }) {
          try {
@@ -65,17 +71,18 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
             ret = await sender.Notify(type, data);
          }
          catch (Exception e) {
-            Console.Error.WriteLine(e);
+            Log.Catch(tag, func, e);
          }
       }
 
-      if (_notify.Email is not { Enabled: true }) return ret;
-      try {
-         using var sender = new EmailSender(_notify.Email, filePrefix);
-         ret = await sender.Notify(type, data);
-      }
-      catch (Exception e) {
-         Console.Error.WriteLine(e);
+      if (_notify.Email is { Enabled: true }) {
+         try {
+            using var sender = new EmailSender(_notify.Email, filePrefix);
+            ret = await sender.Notify(type, data);
+         }
+         catch (Exception e) {
+            Log.Catch(tag, func, e);
+         }
       }
 
       return ret;

@@ -108,6 +108,25 @@ public abstract class Log {
       Console.WriteLine($"{now} {tag} {title}:\n{json}\n");
    }
 
+   public static void Entry(string tag, string func, object? o = null, bool mask = false) {
+      if (o == null) {
+         WriteLine(tag, $"{func} entry");
+         return;
+      }
+      var json = JsonSerializer.Serialize(o, mask ? Const.JsonMaskedOptions : Const.JsonOptions);
+      WriteLine(tag, $"{func} entry", json);
+   }
+
+   public static void Exit(string tag, string func, object? o = null, bool mask = false) {
+      if (o == null) {
+         WriteLine(tag, $"{func} exit");
+         return;
+      }
+      var json = JsonSerializer.Serialize(o, mask ? Const.JsonMaskedOptions : Const.JsonOptions);
+      WriteLine(tag, $"{func} entry", json);
+   }
+
+
    #region Private
 
    private static string MaskRemoveMiddleWithSize(string s) {
@@ -142,8 +161,6 @@ public abstract class Log {
       sb.Append(s[^1]);
       return sb.ToString();
    }
-
-
 
    #endregion
 }

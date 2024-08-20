@@ -16,6 +16,10 @@ public class EmailSender(NotifyConfig.EmailConfig email, string hostname) : INot
    }
 
    public async Task<bool> Notify(CertType type, byte[] data) {
+      if (!email.Enabled) {
+         Log.Warn(tag, nameof(Notify), "Email notifications are disabled");
+         return false;
+      }
       var result = false;
       try {
          var subject = type switch {

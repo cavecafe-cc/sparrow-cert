@@ -14,14 +14,13 @@ using SparrowCert.Certificates;
 namespace SparrowCert;
 
 public class CertRunner : IHostedService {
+   private const string tag = nameof(CertRunner);
 
-   const string tag = nameof(CertRunner);
-   private readonly IWebHost host;
-   private static bool IsSelfSigned = false;
+   private readonly IWebHost certHost;
+   private static bool IsSelfSigned;
 
    public CertRunner(CertConfiguration cfg) {
-
-      Log.Info(tag, "ctor called");
+      Log.Entry(tag, "ctor");
       var config = cfg;
 
       #region check certificates
@@ -49,15 +48,15 @@ public class CertRunner : IHostedService {
       }
       #endregion
 
-      host = new WebHostBuilder().UseKestrel(kso => {
-         Log.Info(tag, "UseKestrel called",
-            $"using local ports http:{config.HttpPort}, https:{config.HttpsPort}");
+      certHost = new WebHostBuilder().UseKestrel(kso => {
+         Log.Info(tag, "UseKestrel",
+            $"ports http:{config.HttpPort}, https:{config.HttpsPort}");
          kso.ListenAnyIP(config.HttpPort);
          kso.ListenAnyIP(config.HttpsPort, lo => {
             lo.UseHttps(x509);
          });
       })
-      .ConfigureServices(svc => {
+      .ConfigureServices(sevices => {
          Log.Info(tag, "ConfigureServices called");
          if (config == null) {
             throw new InvalidDataException("no configuration found");
@@ -65,15 +64,18 @@ public class CertRunner : IHostedService {
          Log.Info(tag, $"UseStaging='{config.UseStaging}'");
          Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
 
-         svc.AddSparrowCert(config);
-         svc.AddSparrowCertFileCertStore(
+         sevices.AddSparrowCert(config);
+         sevices.AddSparrowCertFileCertStore(
             config.Notify,
             config.UseStaging,
             config.StorePath,
             hostName
          );
-         svc.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
-         svc.AddSparrowCertRenewalHook(config.Notify, config.Domains);
+         sevices.Configure<HostOptions>(option => {
+            option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+         });
+         sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
+         sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
       })
       .Configure(app =>
       {
@@ -83,21 +85,20 @@ public class CertRunner : IHostedService {
       .Build();
    }
    
-   public async Task StartAsync(CancellationToken cancel)
-   {
-      Log.Info(tag, "starting ...");
+   public async Task StartAsync(CancellationToken cancel) {
+      Log.Entry(tag, nameof(StartAsync));
 
       if (IsSelfSigned) {
-         Log.Info(tag, $"IsSelfSigned={IsSelfSigned}, calling RunOnceAsync");
-         await host.Services.GetRequiredService<IRenewalService>().RunOnceAsync();
+         Log.Warn(tag, $"IsSelfSigned={IsSelfSigned}, calling RunOnceAsync");
+         await certHost.Services.GetRequiredService<IRenewalService>().RunOnceAsync();
       }
-      await host.StartAsync(cancel);
+      await certHost.StartAsync(cancel);
    }
 
-   public async Task StopAsync(CancellationToken cancellationToken)
-   {
-      Log.Info(tag, "stopping ...");
-      await host.StopAsync(cancellationToken);
+   public async Task StopAsync(CancellationToken cancel) {
+      Log.Entry(tag, nameof(StopAsync));
+      await certHost.StopAsync(cancel);
+      certHost.Dispose();
    }
 
 }

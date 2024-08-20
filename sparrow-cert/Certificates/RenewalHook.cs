@@ -4,33 +4,33 @@ using SparrowCert.Certes;
 
 namespace SparrowCert;
 
-public class RenewalHook : IRenewalHook {
+public sealed class RenewalHook : IRenewalHook {
    private const string tag = nameof(RenewalHook);
    private readonly NotifyConfig notify;
    private readonly string[] domains;
 
    public RenewalHook(NotifyConfig notifyConfig, string[] domainNames) {
-      Log.Info(tag, "ctor called" );
+      Log.Entry(tag, "ctor" );
       notify = notifyConfig;
       domains = domainNames;
    }
    
-   public virtual Task OnStartAsync() {
+   public Task OnStartAsync() {
       Log.Info(tag, $"{nameof(OnStartAsync)} called");;
       return Task.CompletedTask;
    }
 
-   public virtual Task OnStopAsync() {
+   public Task OnStopAsync() {
       Log.Info(tag, $"{nameof(OnStopAsync)} called");
       return Task.CompletedTask;
    }
 
-   public virtual Task OnRenewalSucceededAsync() {
+   public Task OnRenewalSucceededAsync() {
       Log.Info(tag, $"{nameof(OnRenewalSucceededAsync)} called");;
       return Task.CompletedTask;
    }
 
-   public virtual Task OnExceptionAsync(Exception e) {
+   public Task OnExceptionAsync(Exception e) {
       Log.Info(tag, $"{nameof(OnExceptionAsync)} called");
       return Task.CompletedTask;
    }
