@@ -76,7 +76,7 @@ public class CertConfiguration {
       var hostName = CertUtil.GetDomainOrHostname(Domains.First());
       CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
       StorePath = config.GetValue<string>("StorePath");
-      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
+      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ]);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
    }
