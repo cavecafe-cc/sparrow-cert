@@ -76,13 +76,13 @@ public class CertConfiguration {
       var hostName = CertUtil.GetDomainOrHostname(Domains.First());
       CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
       StorePath = config.GetValue<string>("StorePath");
-      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ]);
+      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
    }
 
    // Copy the files with the given extensions to the store path
-   private void CopyCertFiles(string storePath, string configPath, string hostName, string[] extensions, bool overwrite = false) {
+   private void CopyCertFiles(string storePath, string configPath, string hostName, string[] extensions, bool backupReplace = false) {
       if (string.IsNullOrWhiteSpace(storePath) || !Directory.Exists(storePath)) return;
       foreach (var ext in extensions) {
          if (string.IsNullOrWhiteSpace(ext)) continue;
@@ -95,8 +95,10 @@ public class CertConfiguration {
                var filePath = Path.Combine(storePath, Path.GetFileName(f));
                if (File.Exists(filePath)) {
                   sb.Append($"File '{filePath}' already exists, ");
-                  if (overwrite) {
-                     File.Delete(filePath);
+                  if (backupReplace) {
+                     var backup = Path.Combine(storePath, $"{Path.GetFileNameWithoutExtension(f)}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(f)}");
+                     File.Move(filePath, backup);
+                     sb.Append($"existing file moved to '{backup}' and ");
                      sb.Append($"will be replaced with new one.");
                   }
                   else {
@@ -106,7 +108,7 @@ public class CertConfiguration {
                   }
                }
                sb.Append($"Copying file '{f}' to '{filePath}'");
-               File.Copy(f, filePath, overwrite);
+               File.Copy(f, filePath, backupReplace);
                Log.Info(tag, sb.ToString());
             }
             catch (Exception e) {
