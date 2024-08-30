@@ -123,7 +123,7 @@ public static class RegistrationExtensions {
       services.AddSparrowCertStore();
 
       var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
-      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.StorePath, hostName);
+      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyPath, hostName);
       services.AddSingleton(config);
 
       services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();

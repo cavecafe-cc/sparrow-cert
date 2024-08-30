@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using Certes;
 using Certes.Acme;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Protocols.Configuration;
 using Sparrow.UPnP;
 using SparrowCert.Certificates;
 
@@ -75,15 +76,33 @@ public class CertConfiguration {
       CertAlias = config.GetValue<string>("CertAlias");
       var hostName = CertUtil.GetDomainOrHostname(Domains.First());
       CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
-      StorePath = config.GetValue<string>("StorePath");
-      CopyCertFiles(StorePath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
+      var relPath = config.GetValue<string>("KeyPath");
+      KeyPath = GetOSPath(relPath);
+      CopyCertFiles(KeyPath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
       CertPwd = config.GetValue<string>("CertPwd");
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
    }
 
+   private string GetOSPath(string relPath) {
+      if (string.IsNullOrWhiteSpace(relPath)) {
+         throw new InvalidConfigurationException("no keystore path specified");
+      }
+      if (Path.IsPathRooted(relPath)) {
+         return relPath;
+      }
+      if (OperatingSystem.IsLinux()) {
+         return Path.Combine("/var", relPath);
+      }
+      if (OperatingSystem.IsMacOS() || OperatingSystem.IsWindows()) {
+         var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+         return Path.Combine(homeDirectory, relPath);
+      }
+      throw new InvalidConfigurationException("unsupported operating system");
+   }
+
    // Copy the files with the given extensions to the store path
-   private void CopyCertFiles(string storePath, string configPath, string hostName, string[] extensions, bool backupReplace = false) {
-      if (string.IsNullOrWhiteSpace(storePath) || !Directory.Exists(storePath)) return;
+   private void CopyCertFiles(string keyPath, string configPath, string hostName, string[] extensions, bool backupReplace = false) {
+      if (string.IsNullOrWhiteSpace(keyPath) || !Directory.Exists(keyPath)) return;
       foreach (var ext in extensions) {
          if (string.IsNullOrWhiteSpace(ext)) continue;
          var dir = Path.GetDirectoryName(configPath);
@@ -92,11 +111,11 @@ public class CertConfiguration {
          files.ToList().ForEach(f => {
             try {
                StringBuilder sb = new();
-               var filePath = Path.Combine(storePath, Path.GetFileName(f));
+               var filePath = Path.Combine(keyPath, Path.GetFileName(f));
                if (File.Exists(filePath)) {
                   sb.Append($"File '{filePath}' already exists, ");
                   if (backupReplace) {
-                     var backup = Path.Combine(storePath, $"{Path.GetFileNameWithoutExtension(f)}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(f)}");
+                     var backup = Path.Combine(keyPath, $"{Path.GetFileNameWithoutExtension(f)}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(f)}");
                      File.Move(filePath, backup);
                      sb.Append($"existing file moved to '{backup}' and ");
                      sb.Append($"will be replaced with new one.");
@@ -112,7 +131,7 @@ public class CertConfiguration {
                Log.Info(tag, sb.ToString());
             }
             catch (Exception e) {
-               Log.Catch(tag, $"Error copying file '{f}' to '{storePath}'", e);
+               Log.Catch(tag, $"Error copying file '{f}' to '{keyPath}'", e);
             }
          });
       }
@@ -142,7 +161,7 @@ public class CertConfiguration {
    public int HttpPort { get; set; }
    public int HttpsPort { get; set; }
    public string CertAlias { get; set; }
-   public string StorePath { get; set; }
+   public string KeyPath { get; set; }
    public string CertPwd { get; set; }
    public NotifyConfig Notify { get; set; }
    

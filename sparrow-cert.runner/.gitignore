@@ -6,3 +6,4 @@
 cert.json
 cert.staging.json
 /k8s/
+.idea/

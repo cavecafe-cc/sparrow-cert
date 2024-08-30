@@ -61,7 +61,7 @@ The service is configured through a `cert.json` file. Here is an example configu
   "HttpPort": 5080,                           // for NAT, customizable HTTP port (80 -> i.e. 5080)
   "HttpsPort": 5443,                          // for NAT, customizable HTTPS port (443 -> i.e. 5443)
   "CertAlias": "own-domain-host-name",
-  "StorePath": "/sparrow-cert/",              // where to store the new certificates (typically, with K8s Persistent Volume)
+  "KeyPath": "/var/sparrow-cert/keys",        // where to store the new certificates (typically, with K8s Persistent Volume)
   "CertPwd": "your-cert-password",            // your certificate password when it is issued (or renewed)
 
   "Notify": {
