@@ -31,7 +31,7 @@ public class CertRunner : IHostedService {
       var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
       var pfx = $"{hostName}.pfx";
       Log.Info(tag, $"searching for '{pfx}'");
-      var certPath = Path.Combine(config.StorePath, pfx);
+      var certPath = Path.Combine(config.KeyPath, pfx);
       var certExists = File.Exists(certPath);
       Log.Info(tag, (certExists ? $"cert found at '{certPath}'" : "no cert found, request to create one"));
 
@@ -64,19 +64,19 @@ public class CertRunner : IHostedService {
                throw new InvalidDataException("no configuration found");
             }
             Log.Info(tag, $"UseStaging='{config.UseStaging}'");
-            Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.StorePath) ? Environment.CurrentDirectory : config.StorePath)}'");
+            Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.KeyPath) ? Environment.CurrentDirectory : config.KeyPath)}'");
 
             sevices.AddSparrowCert(config);
             sevices.AddSparrowCertFileCertStore(
                config.Notify,
                config.UseStaging,
-               config.StorePath,
+               config.KeyPath,
                hostName
             );
             sevices.Configure<HostOptions>(option => {
                option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
             });
-            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.StorePath, hostName);
+            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.KeyPath, hostName);
             sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
          })
          .Configure(app =>
