@@ -3,6 +3,7 @@ cert.staging.json
 bin/
 obj/
 node_modules/
+.idea/
 SparrowCert_*.json
 *.pem
 *.pfx
