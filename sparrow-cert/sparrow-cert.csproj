@@ -22,22 +22,22 @@
 
   <ItemGroup>
     <PackageReference Include="certes" Version="3.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageReference Include="Microsoft.IdentityModel.Protocols" Version="8.0.2" />
-    <PackageReference Include="SharpOpenNat" Version="4.0.3" />
-    <PackageReference Include="sparrow-upnp" Version="1.0.13" />
-    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols" Version="8.1.2" />
+    <PackageReference Include="SharpOpenNat" Version="4.0.4" />
+    <PackageReference Include="sparrow-upnp" Version="1.0.15" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
   <ItemGroup>
     <None Update="README.md">
