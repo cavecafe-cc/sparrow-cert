@@ -36,7 +36,7 @@ spec:
                   # run the cert task (arg1 is the path of cert.pfx) \
                   dotnet /app/sparrow-cert-task.dll \
                   exit_code=$? \
-                  echo "Task completed with exit code $exit_code" \
+                  echo "Task completed with exit code $exit_code"
 #                  ################################################ \
 #                  # exit_code values are as follows: \
 #                  # any positive number: remaining renewal days \
