@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using SparrowCert.Certes;
-using SparrowCert.Store;
+﻿using SparrowCert.Certes;
 
 namespace SparrowCert;
 
