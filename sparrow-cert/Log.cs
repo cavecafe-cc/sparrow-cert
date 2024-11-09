@@ -3,10 +3,15 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace SparrowCert;
 
 public abstract class Log {
+
+   public static readonly ILoggerFactory Factory = LoggerFactory.Create(builder => {
+      builder.AddConsole();
+   });
 
    public static void Info(string tag = "", string title = "", string message = "") {
       WriteLine(tag, title, message);

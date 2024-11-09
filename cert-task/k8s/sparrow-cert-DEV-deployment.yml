@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sparrow-cert
+  namespace: melog-io-dev
+  labels:
+    app: sparrow-cert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sparrow-cert
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      name: sparrow-cert
+      labels:
+        app: sparrow-cert
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
+      containers:
+        - name: sparrow-cert
+          image: cavecafe/sparrow-cert:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 30m
+          volumeMounts:
+            - mountPath: /etc/sparrow-cert/config # path to the mounted secret (ReadOnly)
+              name: config-secret
+              readOnly: true
+            - mountPath: /etc/sparrow-cert/keystore # path to the mounted hostPath (ReadWrite)
+              name: store-cert
+              readOnly: false
+
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              dotnet /app/sparrow-cert-task.dll
+      restartPolicy: Always
+      volumes:
+        - name: config-secret
+          secret:
+            secretName: config-secret
+        - name: store-cert
+          hostPath:
+            path: /etc/sparrow-cert/keystore
+            type: DirectoryOrCreate
+---

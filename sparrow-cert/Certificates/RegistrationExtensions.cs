@@ -97,10 +97,10 @@ public static class RegistrationExtensions {
    public static void AddSparrowCertFileChallengeStore(
       this IServiceCollection services,
       bool isStaging,
-      string basePath,
+      string storePath,
       string filePrefix) {
       AddSparrowCertChallengeStore(services,
-         new FileChallengeStore(basePath, filePrefix + (isStaging ? ".staging" : "")));
+         new FileChallengeStore(storePath, filePrefix + (isStaging ? ".staging" : "")));
    }
 
    public static void AddSparrowCertMemoryChallengeStore(
@@ -123,7 +123,7 @@ public static class RegistrationExtensions {
       services.AddSparrowCertStore();
 
       var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
-      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyPath, hostName);
+      services.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath, hostName);
       services.AddSingleton(config);
 
       services.AddSingleton<ILetsEncryptClientFactory, LetsEncryptClientFactory>();

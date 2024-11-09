@@ -1,0 +1,7 @@
+.env
+.env.*
+.secret.yml
+/secret.yml
+**/*-secret.yml
+.DS_Store
+*.b64

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using SparrowCert.Certes;
 using SparrowCert.Certificates;
@@ -15,6 +16,9 @@ namespace SparrowCert;
 
 public class CertRunner : IHostedService {
    private const string tag = nameof(CertRunner);
+
+   // todo - use logger
+   // private static readonly ILogger<CertRunner> log = Log.Factory.CreateLogger<CertRunner>();
 
    private readonly IWebHost certHost;
    private static bool IsSelfSigned;
@@ -31,7 +35,7 @@ public class CertRunner : IHostedService {
       var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
       var pfx = $"{hostName}.pfx";
       Log.Info(tag, $"searching for '{pfx}'");
-      var certPath = Path.Combine(config.KeyPath, pfx);
+      var certPath = Path.Combine(config.KeyConfigPath, pfx);
       var certExists = File.Exists(certPath);
       Log.Info(tag, (certExists ? $"cert found at '{certPath}'" : "no cert found, request to create one"));
 
@@ -64,19 +68,19 @@ public class CertRunner : IHostedService {
                throw new InvalidDataException("no configuration found");
             }
             Log.Info(tag, $"UseStaging='{config.UseStaging}'");
-            Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.KeyPath) ? Environment.CurrentDirectory : config.KeyPath)}'");
+            Log.Info(tag, $"cert mounted at '{(string.IsNullOrEmpty(config.KeyConfigPath) ? Environment.CurrentDirectory : config.KeyConfigPath)}'");
 
             sevices.AddSparrowCert(config);
             sevices.AddSparrowCertFileCertStore(
                config.Notify,
                config.UseStaging,
-               config.KeyPath,
+               config.KeyStorePath,
                hostName
             );
             sevices.Configure<HostOptions>(option => {
                option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
             });
-            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, basePath: config.KeyPath, hostName);
+            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath,  hostName);
             sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
          })
          .Configure(app =>

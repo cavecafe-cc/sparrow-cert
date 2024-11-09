@@ -2,7 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sparrow-cert", "sparrow-cert\sparrow-cert.csproj", "{9F667842-956C-44DA-9520-FDB65876E6FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sparrow-cert.runner", "sparrow-cert.runner\sparrow-cert.runner.csproj", "{730E83D7-6D02-42C8-9403-F04252619EC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cert-service", "cert-service\cert-service.csproj", "{730E83D7-6D02-42C8-9403-F04252619EC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cert-task", "cert-task\cert-task.csproj", "{AB419981-C1FC-44B4-94D1-CFCDF498982C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +20,9 @@ Global
 		{730E83D7-6D02-42C8-9403-F04252619EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{730E83D7-6D02-42C8-9403-F04252619EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{730E83D7-6D02-42C8-9403-F04252619EC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB419981-C1FC-44B4-94D1-CFCDF498982C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB419981-C1FC-44B4-94D1-CFCDF498982C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB419981-C1FC-44B4-94D1-CFCDF498982C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB419981-C1FC-44B4-94D1-CFCDF498982C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

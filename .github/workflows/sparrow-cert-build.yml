@@ -1,0 +1,98 @@
+name: Build (sparrow-cert)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/sparrow-cert-build.yml'
+      - 'sparrow-cert/**'
+      - 'cert-task/**'
+      
+env:
+  REPO_PATH: ${{github.repository}}
+  GIT_BRANCH: ${{github.ref_name}}
+  AUTHOR: ${{github.actor}}
+  PROJECT_DIR: cert-task
+  PROJECT_NAME: cert-task
+  RELEASE_NAME: sparrow-cert
+  PROJECT_ENVIRONMENT: Release
+  PROJECT_OUTPUT: publish
+  PROJECT_FRAMEWORK: net8.0
+  PROJECT_ARCH: linux-x64
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set derived environment variables
+        run: |
+          REPO_NAME=$(basename ${{env.REPO_PATH}})
+          echo "REPO_NAME=$REPO_NAME" | tee -a $GITHUB_ENV
+          GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+          echo "GIT_COMMIT_ID=$GIT_COMMIT_ID" | tee -a $GITHUB_ENV
+          BUILD_VERSION=${{env.GIT_BRANCH}}-$(date +%Y%m%d)-$GIT_COMMIT_ID
+          echo "BUILD_VERSION=$BUILD_VERSION" | tee -a $GITHUB_ENV
+
+      - name: Verify environment variables
+        run: |
+          echo REPO_PATH="${{ env.REPO_PATH }}"
+          echo REPO_NAME="${{ env.REPO_NAME }}"
+          echo PROJECT_DIR="${{ env.PROJECT_DIR }}"
+          echo PROJECT_NAME="${{ env.PROJECT_NAME }}"
+          echo RELEASE_NAME="${{ env.RELEASE_NAME }}"
+          echo GIT_BRANCH="${{ env.GIT_BRANCH }}"
+          echo GIT_COMMIT_ID="${{ env.GIT_COMMIT_ID }}"
+          echo BUILD_VERSION="${{ env.BUILD_VERSION }}"
+          echo AUTHOR="${{ env.AUTHOR }}"
+          echo PROJECT_OUTPUT="${{ env.PROJECT_OUTPUT }}"
+          echo PROJECT_ARCH="${{ env.PROJECT_ARCH }}"
+
+      - name: Build Application
+        run: |
+          echo cd ${{env.PROJECT_DIR}}
+          cd ${{env.PROJECT_DIR}}
+          echo "BUILD started at '$(pwd)'"
+          echo "executing 'dotnet restore ${{env.PROJECT_NAME}}.csproj'"
+          dotnet restore ${{env.PROJECT_NAME}}.csproj
+          echo "executing 'dotnet publish ${{env.PROJECT_NAME}}.csproj -c ${{env.PROJECT_ENVIRONMENT}} -o publish -r ${{env.PROJECT_ARCH}} -f ${{env.PROJECT_FRAMEWORK}} -p:PublishTrimmed=false -p:PublishSingleFile=false -p:PublishReadyToRun=false --self-contained false /p:UseAppHost=false'"
+          dotnet publish ${{env.PROJECT_NAME}}.csproj -c ${{env.PROJECT_ENVIRONMENT}} -o publish -r ${{env.PROJECT_ARCH}} -f ${{env.PROJECT_FRAMEWORK}} -p:PublishTrimmed=false -p:PublishSingleFile=false -p:PublishReadyToRun=false --self-contained false /p:UseAppHost=false
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: false
+
+      - name: Build Docker Image to Push to DockerHub
+        run: |
+          DOCKERHUB_PATH=${{ secrets.DOCKERHUB_USERNAME }}/${{env.RELEASE_NAME}}
+          echo DOCKERHUB_PATH=$DOCKERHUB_PATH
+          echo "DOCKERHUB_PATH=$DOCKERHUB_PATH" >> $GITHUB_ENV
+
+          echo cd ${{env.PROJECT_DIR}}
+          cd ${{env.PROJECT_DIR}}
+          echo "DOCKER BUILD pwd='$(pwd)'"
+          echo start building image $DOCKERHUB_PATH:${{env.BUILD_VERSION}} ...
+
+          DOCKERFILE_NAME="Dockerfile"
+          echo "Dockerfile Name=$DOCKERFILE_NAME"
+
+          docker build \
+          -f $DOCKERFILE_NAME \
+          --build-arg BUILD_VERSION=${{ env.BUILD_VERSION }} \
+          --build-arg AUTHOR=${{env.AUTHOR}} \
+          --build-arg PROJECT_OUTPUT=${{env.PROJECT_OUTPUT}} \
+          \
+          -t $DOCKERHUB_PATH:${{ env.BUILD_VERSION }} .
+
+          echo built image $DOCKERHUB_PATH:${{ env.BUILD_VERSION }}
+          echo tagging image $DOCKERHUB_PATH:${{ env.BUILD_VERSION }}, $DOCKERHUB_PATH:latest ...
+          docker tag $DOCKERHUB_PATH:${{ env.BUILD_VERSION }} $DOCKERHUB_PATH:latest
+          echo pushing image $DOCKERHUB_PATH:latest, $DOCKERHUB_PATH:${{ env.BUILD_VERSION }} ...
+          docker push $DOCKERHUB_PATH:latest
+          docker push $DOCKERHUB_PATH:${{ env.BUILD_VERSION }}

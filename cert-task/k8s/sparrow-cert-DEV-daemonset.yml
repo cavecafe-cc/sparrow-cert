@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: create-cert-dir
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: create-cert-dir
+  template:
+    metadata:
+      labels:
+        app: create-cert-dir
+    spec:
+      containers:
+        - name: setup-cert-dir
+          image: busybox
+          command: ["sh", "-c", "mkdir -p /etc/sparrow-cert/keystore/ && chown 1001:1001 /etc/sparrow-cert/keystore/ && chmod 750 /etc/sparrow-cert/keystore/"]
+          volumeMounts:
+            - name: host-volume
+              mountPath: /etc/sparrow-cert
+          securityContext:
+            privileged: true
+      volumes:
+        - name: host-volume
+          hostPath:
+            path: /etc/sparrow-cert
+            type: DirectoryOrCreate
+      restartPolicy: Always
+---

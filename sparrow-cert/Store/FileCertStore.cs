@@ -8,6 +8,8 @@ namespace SparrowCert.Store;
 
 public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath, string filePrefix) : ICertStore {
    private const string tag = nameof(FileCertStore);
+
+   public static bool IsStored = false;
    public bool IsStaging { get; init; } = isStaging;
    private NotifyConfig _notify { get; init; } = notify;
 
@@ -16,7 +18,27 @@ public class FileCertStore(NotifyConfig notify, bool isStaging, string basePath,
       lock (typeof(FileCertStore)) {
          Directory.CreateDirectory(basePath);
          Log.Info(tag, $"Saving {type} certificate to {path}");
-         File.WriteAllBytes(path, cert.RawData);
+
+         var fileExists = File.Exists(path);
+         var fileNameOnly = Path.GetFileNameWithoutExtension(path);
+         var fileExtension = Path.GetExtension(path);
+         var datedFileName = $"{fileNameOnly}-{DateTime.Now:yyyy-MM-dd-HHmmss}{fileExtension}";
+         var datedPath = Path.Combine(basePath, datedFileName);
+
+         if (fileExists) {
+            Log.Warn(tag, $"File {path} exists, creating backup ...");
+            var backupFileName = $"backup_{datedFileName}";
+            var backupPath = Path.Combine(basePath, backupFileName);
+            File.Move(path, backupPath);
+         }
+         File.WriteAllBytes(datedPath, cert.RawData);
+         if (File.Exists(path)) {
+            Log.Info(tag, $"Deleting existing file {path}");
+            File.Delete(path);
+         }
+         var fileInfo =  File.CreateSymbolicLink(path!, datedPath);
+         Log.Info(tag, $"Created symbolic link {path} -> {datedPath}");
+         IsStored = fileInfo.Exists;
       }
 
       if (_notify != null) {

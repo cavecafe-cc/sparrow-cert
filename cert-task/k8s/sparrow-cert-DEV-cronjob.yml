@@ -1,0 +1,96 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cert-renewal-cronjob
+  namespace: melog-io-dev
+spec:
+  # schedule: "0 3 * * *" # (PROD) run 3 AM everyday
+  # schedule: "0 3,15 * * *" # run 3 AM & 3 PM everyday
+  schedule: "*/5 * * * *" # (TEST) run every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: sparrow-cert
+              image: cavecafe/sparrow-cert:latest
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                runAsUser: 1001
+                runAsGroup: 1001
+              resources:
+                requests:
+                  memory: 32Mi
+                  cpu: 30m
+              volumeMounts:
+                - mountPath: /etc/sparrow-cert/config
+                  name: config-secret
+                  readOnly: true
+                - mountPath: /etc/sparrow-cert/keystore
+                  name: store-cert
+                  readOnly: false
+
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  # run the cert task (arg1 is the path of cert.pfx) \
+                  dotnet /app/sparrow-cert-task.dll \
+                  exit_code=$? \
+                  echo "Task completed with exit code $exit_code" \
+#                  ################################################ \
+#                  # exit_code values are as follows: \
+#                  # any positive number: remaining renewal days \
+#                  # -200: renewal success (need to update config-secret by kubectl) \
+#                  # -001: general error \
+#                  # -100: renewal disabled (warning should be shown) \
+#                  # -400: renewal failed (don't know reason) \
+#                  # -401: invalid configuration \
+#                  # -404: network error (timeout) \
+#                  # -500: unknown exception \
+#                  ################################################ \
+#                  /
+#                  switch $exit_code \
+#                    case -200 \
+#                        echo "Renewal success" \
+#                        # update the secret \
+#                        kubectl create secret generic config-secret --from-file=cert.pfx=/etc/sparrow-cert/save/cert.pfx --dry-run=client -o yaml | kubectl apply -f - \
+#                        echo "Secret updated" \
+#                        kubectl delete pod -n melog-io-dev $(kubectl get pod -n melog-io-dev | grep sparrow-cert | awk '{print $1}') \
+#                        exit 0 \
+#                    case -1 \
+#                        echo "General error" \
+#                        exit 1 \
+#                    case -100 \
+#                        echo "Renewal disabled" \
+#                        exit 2 \
+#                    case -400 \
+#                        echo "Renewal failed" \
+#                        exit 3 \
+#                    case -401 \
+#                        echo "Invalid configuration" \
+#                        exit 4 \
+#                    case -404 \
+#                        echo "Network error" \
+#                        exit 5 \
+#                    case -500 \
+#                        echo "Unknown exception" \
+#                        exit 6 \
+#                    default \
+#                        echo "Remaining renewal days: $exit_code" \
+#                        exit 7 \
+#                    end \
+#                    /
+#                  # copy the cert file to the shared volume \
+#                  # location of the cert file \
+#                  cp /etc/sparrow-cert/config/cert.pfx /sparrow-cert/
+
+          restartPolicy: OnFailure
+          volumes:
+            - name: config-secret
+              secret:
+                secretName: config-secret
+            - name: store-cert
+              hostPath:
+                path: /etc/sparrow-cert/keystore
+                type: DirectoryOrCreate
+---

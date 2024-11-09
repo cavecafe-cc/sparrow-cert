@@ -16,8 +16,83 @@ namespace SparrowCert.Certes;
 
 public class CertConfiguration {
    public const string JSON = "cert.json";
+   public const string SPARROW_CERT = "sparrow-cert";
    private const string tag = nameof(CertConfiguration);
-   
+
+   #region Properties
+
+   public bool Enabled { get; set; } = false;
+   public List<string> Domains { get; set; }
+   public string Email { get; set; }
+   public TimeSpan RenewBeforeExpiry { get; set; }
+   public TimeSpan RenewAfterIssued { get; set; }
+   public bool UseStaging { get; set; }
+   public CertSigningRequestConfig CertSigningRequest { get; set; }
+   public UPnPConfiguration UPnP { get; set; }
+   public RenewalFailMode RenewalFailMode { get; set; }
+   public KeyAlgorithm KeyAlgorithm { get; set; }
+   public TimeSpan RenewalStartupDelay { get; set; }
+
+   public bool WithHttpProxy { get; set; }
+   public int HttpPort { get; set; }
+   public int HttpsPort { get; set; }
+   public string CertAlias { get; set; }
+   public string KeyConfigPath { get; set; }
+   public string KeyStorePath { get; set; }
+   public string CertPwd { get; set; }
+   public NotifyConfig Notify { get; set; }
+
+   [JsonIgnore]
+   public Uri LetsEncryptUri => UseStaging
+      ? WellKnownServers.LetsEncryptStagingV2
+      : WellKnownServers.LetsEncryptV2;
+
+   #endregion
+
+   public CertConfiguration(string configPath = "") {
+      if (string.IsNullOrWhiteSpace(configPath)) {
+         configPath = Path.Combine($"/etc/{SPARROW_CERT}", JSON);
+      }
+      if (!Path.IsPathRooted(configPath)) {
+         configPath = Path.Combine(Directory.GetCurrentDirectory(), configPath);
+      }
+
+      var builder = new ConfigurationBuilder()
+         .AddJsonFile(configPath, optional: false, reloadOnChange: true);
+
+      var config = builder.Build();
+      Enabled = config.GetValue<bool>(nameof(Enabled));
+      if (!Enabled) return;
+
+      Domains = config.GetSection(nameof(Domains)).Get<List<string>>();
+      Email = config.GetValue<string>(nameof(Email));
+      RenewBeforeExpiry = config.GetValue<TimeSpan>( nameof(RenewBeforeExpiry));
+      RenewAfterIssued = config.GetValue<TimeSpan>(nameof(RenewAfterIssued));
+      UseStaging = config.GetValue<bool>( nameof(UseStaging));
+      CertSigningRequest = config.GetSection(nameof(CertSigningRequest)).Get<CertSigningRequestConfig>();
+      UPnP = config.GetSection(nameof(UPnP)).Get<UPnPConfiguration>();
+      RenewalFailMode = config.GetValue<RenewalFailMode>(nameof(RenewalFailMode));
+      KeyAlgorithm = config.GetValue<KeyAlgorithm>(nameof(KeyAlgorithm));
+      RenewalStartupDelay = config.GetValue<TimeSpan>(nameof(RenewalStartupDelay));
+
+      WithHttpProxy = config.GetValue<bool>(nameof(WithHttpProxy));
+      HttpPort = config.GetValue<int>(nameof(HttpPort));
+      HttpsPort = config.GetValue<int>(nameof(HttpsPort));
+      CertAlias = config.GetValue<string>(nameof(CertAlias));
+      var hostName = CertUtil.GetDomainOrHostname(Domains.First());
+      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
+      var relPath = config.GetValue<string>( nameof(KeyConfigPath));
+      KeyConfigPath = GetOSPath(relPath);
+      relPath = config.GetValue<string>(nameof(KeyStorePath));
+      KeyStorePath = GetOSPath(relPath);
+      CopyCertFiles(KeyConfigPath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
+
+      CertPwd = config.GetValue<string>(nameof(CertPwd));
+      Notify = config.GetSection("Notify").Get<NotifyConfig>();
+
+   }
+
+
    public static CertConfiguration Load(string configPath = "") {
       return new CertConfiguration(configPath);
    }
@@ -41,47 +116,8 @@ public class CertConfiguration {
          return false;
       }
    }
-   
-   public CertConfiguration() { }  // for serialization
-   public CertConfiguration(string configPath = "") {
-      if (string.IsNullOrWhiteSpace(configPath)) {
-         configPath = JSON;
-      }
 
-      if (!Path.IsPathRooted(configPath)) {
-         configPath = Path.Combine(Directory.GetCurrentDirectory(), configPath);
-      }
-
-      var builder = new ConfigurationBuilder()
-         .AddJsonFile(configPath, optional: false, reloadOnChange: true);
-
-      var config = builder.Build();
-      Enabled = config.GetValue<bool>("enabled");
-      if (!Enabled) return;
-      
-      Domains = config.GetSection("Domains").Get<List<string>>();
-      Email = config.GetValue<string>("Email");
-      RenewBeforeExpiry = config.GetValue<TimeSpan>("RenewBeforeExpiry");
-      RenewAfterIssued = config.GetValue<TimeSpan>("RenewAfterIssued");
-      UseStaging = config.GetValue<bool>("UseStaging");
-      CertSigningRequest = config.GetSection("CertSigningRequest").Get<CertSigningRequestConfig>();
-      UPnP = config.GetSection("UPnP").Get<UPnPConfiguration>();
-      RenewalFailMode = config.GetValue<RenewalFailMode>("RenewalFailMode");
-      KeyAlgorithm = config.GetValue<KeyAlgorithm>("KeyAlgorithm");
-      RenewalStartupDelay = config.GetValue<TimeSpan>("RenewalStartupDelay");
-      
-      WithHttpProxy = config.GetValue<bool>("WithHttpProxy");
-      HttpPort = config.GetValue<int>("HttpPort");
-      HttpsPort = config.GetValue<int>("HttpsPort");
-      CertAlias = config.GetValue<string>("CertAlias");
-      var hostName = CertUtil.GetDomainOrHostname(Domains.First());
-      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
-      var relPath = config.GetValue<string>("KeyPath");
-      KeyPath = GetOSPath(relPath);
-      CopyCertFiles(KeyPath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
-      CertPwd = config.GetValue<string>("CertPwd");
-      Notify = config.GetSection("Notify").Get<NotifyConfig>();
-   }
+   #region Private Methods
 
    private string GetOSPath(string relPath) {
       if (string.IsNullOrWhiteSpace(relPath)) {
@@ -137,34 +173,7 @@ public class CertConfiguration {
       }
    }
 
-   // Properties
-   public bool Enabled { get; set; } = false;
-   public List<string> Domains { get; set; }
-   public string Email { get; set; }
-   public TimeSpan RenewBeforeExpiry { get; set; }
-   public TimeSpan RenewAfterIssued { get; set; }
-   public bool UseStaging { get; set; }
-
-   [JsonIgnore]
-   public Uri LetsEncryptUri => UseStaging
-      ? WellKnownServers.LetsEncryptStagingV2
-      : WellKnownServers.LetsEncryptV2;
-
-   public CertSigningRequestConfig CertSigningRequest { get; set; }
-   
-   public UPnPConfiguration UPnP { get; set; }
-   public RenewalFailMode RenewalFailMode { get; set; }
-   public KeyAlgorithm KeyAlgorithm { get; set; }
-   public TimeSpan RenewalStartupDelay { get; set; }
-   
-   public bool WithHttpProxy { get; set; }
-   public int HttpPort { get; set; }
-   public int HttpsPort { get; set; }
-   public string CertAlias { get; set; }
-   public string KeyPath { get; set; }
-   public string CertPwd { get; set; }
-   public NotifyConfig Notify { get; set; }
-   
+   #endregion
 
 }
 

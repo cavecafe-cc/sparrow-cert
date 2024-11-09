@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace SparrowCert.Store;
 
-public class FileChallengeStore(string basePath, string filePrefix) : IChallengeStore {
+public class FileChallengeStore(string storePath, string filePrefix) : IChallengeStore {
    public async Task Delete(IEnumerable<ChallengeInfo> challenges) {
       var fromStored = await Load();
       var toStore = fromStored
@@ -27,7 +27,7 @@ public class FileChallengeStore(string basePath, string filePrefix) : IChallenge
 
       lock (typeof(FileChallengeStore)) {
          File.WriteAllBytes(
-            GetPath(),
+            GetStorePath(),
             bytes);
       }
 
@@ -36,17 +36,18 @@ public class FileChallengeStore(string basePath, string filePrefix) : IChallenge
 
    public Task<IEnumerable<ChallengeInfo>> Load() {
       lock (typeof(FileChallengeStore)) {
-         if (!File.Exists(GetPath()))
+         var challengePath = GetStorePath();
+         if (!File.Exists(challengePath))
             return Task.FromResult<IEnumerable<ChallengeInfo>>(new List<ChallengeInfo>());
 
-         var bytes = File.ReadAllBytes(GetPath());
+         var bytes = File.ReadAllBytes(challengePath);
          var json = Encoding.UTF8.GetString(bytes);
          var challenges = JsonSerializer.Deserialize<IEnumerable<ChallengeInfo>>(json);
          return Task.FromResult(challenges);
       }
    }
 
-   private string GetPath() {
-      return Path.Combine(basePath, filePrefix + "-challenges.json");
+   private string GetStorePath() {
+      return Path.Combine(storePath, filePrefix + "-challenges.json");
    }
 }
