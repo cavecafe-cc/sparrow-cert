@@ -27,9 +27,11 @@ LABEL org.opencontainers.image.description="Docker image for ${PROJECT_NAME}"
 LABEL org.opencontainers.image.version=${BUILD_VERSION}
 LABEL org.opencontainers.image.authors=${AUTHOR}
 
-USER $RUN_AS_USER:$RUN_AS_GROUP
-
 COPY ${PROJECT_OUTPUT}/ app/
+RUN chown -R $RUN_AS_USER:$RUN_AS_GROUP /app \
+    && chmod -R 755 /app
+
+USER $RUN_AS_USER:$RUN_AS_GROUP
 
 RUN ls -la app/
 WORKDIR /app
