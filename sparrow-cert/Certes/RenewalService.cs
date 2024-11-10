@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Sparrow.UPnP;
 using SparrowCert.Certificates;
 
@@ -109,7 +110,7 @@ public class RenewalService(
       Log.Entry(tag, nameof(OnApplicationStarted));
 
       // (tk) port todo - check if it works
-      var checker = new UPnPChecker(config.UPnP);
+      var checker = new UPnPChecker(config.UPnP, Log.Factory.CreateLogger<UPnPChecker>());
       var dpList = config.UPnP.PortMap!.Select(p => (p.Description, p.External)).ToList();
       var portAvailabilities = checker.CheckPortsOpened(dpList, config.WithHttpProxy, 4);
       var notReachable = new List<(string domain, int port)>();
