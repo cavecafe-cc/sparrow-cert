@@ -6,7 +6,6 @@
         <RootNamespace>SparrowCert</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>sparrow-cert-task</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
