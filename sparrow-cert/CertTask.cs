@@ -78,6 +78,9 @@ public class CertTask {
                 log.LogInformation("Cert is Self-signed or nearing expiration, attempting renewal ...");
                 await BuildHostAsync(x509);
 
+                // Renew certificate triggered by the renewal service
+                await certHost.Services.GetRequiredService<IRenewalService>().RunOnceAsync();
+
                 var cancel = new CancellationToken();
                 var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(1));  // 1 minute timeout
                 var linkedCancel = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
@@ -121,7 +124,7 @@ public class CertTask {
                 }
 
                 Log.Info(tag, $"UseStaging='{config.UseStaging}'");
-                Log.Info(tag, $"cert stored at '{(string.IsNullOrEmpty(config.KeyConfigPath) ? Environment.CurrentDirectory : config.KeyConfigPath)}'");
+                Log.Info(tag, $"cert config at '{(string.IsNullOrEmpty(config.KeyConfigPath) ? Environment.CurrentDirectory : config.KeyConfigPath)}'");
 
                 var domainName = config.Domains.First();
                 services.AddSparrowCert(config);
