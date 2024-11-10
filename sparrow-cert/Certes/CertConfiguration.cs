@@ -51,7 +51,7 @@ public class CertConfiguration {
 
    public CertConfiguration(string configPath = "") {
       if (string.IsNullOrWhiteSpace(configPath)) {
-         configPath = Path.Combine($"/etc/config/{SPARROW_CERT}", JSON);
+         configPath = Path.Combine($"/etc/{SPARROW_CERT}/config", JSON);
       }
       if (!Path.IsPathRooted(configPath)) {
          configPath = Path.Combine(Directory.GetCurrentDirectory(), configPath);
