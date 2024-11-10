@@ -132,7 +132,7 @@ public class CertTask {
                 services.AddSparrowCertFileCertStore(
                     config.Notify,
                     config.UseStaging,
-                    config.KeyConfigPath,
+                    config.KeyStorePath,
                     domainName
                 );
                 services.Configure<HostOptions>(option => { option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore; });
