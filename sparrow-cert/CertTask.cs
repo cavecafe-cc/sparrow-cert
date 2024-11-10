@@ -125,7 +125,7 @@ public class CertTask {
                 }
 
                 Log.Info(tag, $"UseStaging='{config.UseStaging}'");
-                Log.Info(tag, $"cert config at '{(string.IsNullOrEmpty(config.KeyConfigPath) ? Environment.CurrentDirectory : config.KeyConfigPath)}'");
+                Log.Info(tag, $"cert config at '{(string.IsNullOrEmpty(config.KeyStorePath) ? Environment.CurrentDirectory : config.KeyStorePath)}'");
 
                 var domainName = config.Domains.First();
                 services.AddSparrowCert(config);
