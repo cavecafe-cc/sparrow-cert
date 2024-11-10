@@ -19,7 +19,7 @@ RUN useradd -u $RUN_AS_USER -g $RUN_AS_GROUP $RUN_AS_USERNAME
 RUN mkdir -p /app
 RUN echo '#!/bin/bash' > /app/entrypoint \
     && echo 'echo "entrypoint script"' >> /app/entrypoint \
-    && echo '/app/cert-task.dll "$1"' >> /app/entrypoint \
+    && echo 'dotnet /app/cert-task.dll "$1"' >> /app/entrypoint \
     && chmod +x /app/entrypoint
 
 LABEL org.opencontainers.image.title=${PROJECT_NAME}
