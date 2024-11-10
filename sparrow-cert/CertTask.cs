@@ -97,11 +97,6 @@ public class CertTask {
                 return remainingDays;
             }
 
-            // to test permission on /etc/sparrow-cert/cert-test.txt
-            var testFile = File.CreateText("/etc/sparrow-cert/cert-test.txt");
-            testFile.WriteLine("Hello, etc World!");
-            testFile.Close();
-
             return (int) ExitCodes.RenewFailed;
         }
         catch (Exception e) {
@@ -109,23 +104,6 @@ public class CertTask {
             return (int) ExitCodes.UnknownException;
         }
     }
-
-
-    // public async Task StartAsync(CancellationToken cancel) {
-    //     Log.Entry(tag, nameof(StartAsync));
-    //
-    //     if (isSelfSigned) {
-    //         Log.Warn(tag, $"isSelfSigned={isSelfSigned}, calling RunOnceAsync");
-    //         await certHost.Services.GetRequiredService<IRenewalService>().RunOnceAsync();
-    //     }
-    //     await certHost.StartAsync(cancel);
-    // }
-    //
-    // public async Task StopAsync(CancellationToken cancel) {
-    //     Log.Entry(tag, nameof(StopAsync));
-    //     await certHost.StopAsync(cancel);
-    //     certHost.Dispose();
-    // }
 
     private async Task BuildHostAsync(X509Certificate2 x509) {
         certHost = new WebHostBuilder()
