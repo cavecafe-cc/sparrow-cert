@@ -55,13 +55,14 @@ public class CertTask {
                 return (int) ExitCodes.InvalidConfiguration;
             }
 
-            var domainName = config.Domains.First();
-            var certPath = Path.Combine(config.KeyConfigPath, $"cert.pfx");
+            var tld = config.Domains.First();
+            var staging = config.UseStaging ? ".staging" : "";
+            var certPath = Path.Combine(config.KeyConfigPath, $"{tld}{staging}-cert.pfx");
             var certExists = File.Exists(certPath);
             X509Certificate2 x509;
             if (!certExists) {
                 log.LogInformation("No existing cert found. Generating self-signed certificate.");
-                x509 = CertUtil.GenerateSelfSignedCertificate(domainName);
+                x509 = CertUtil.GenerateSelfSignedCertificate(tld);
             }
             else {
                 log.LogInformation($"Existing cert found at '{certPath}'. Loading certificate.");
