@@ -79,13 +79,14 @@ public class CertConfiguration {
       HttpPort = config.GetValue<int>(nameof(HttpPort));
       HttpsPort = config.GetValue<int>(nameof(HttpsPort));
       CertAlias = config.GetValue<string>(nameof(CertAlias));
-      var hostName = CertUtil.GetDomainOrHostname(Domains.First());
-      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? hostName : CertAlias;
+      var tld = CertUtil.GetDomainOrHostname(Domains.First());
+      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? tld : CertAlias;
       var relPath = config.GetValue<string>( nameof(KeyConfigPath));
       KeyConfigPath = GetOSPath(relPath);
       relPath = config.GetValue<string>(nameof(KeyStorePath));
       KeyStorePath = GetOSPath(relPath);
-      CopyCertFiles(KeyConfigPath, configPath, hostName, [ "*.pfx", "*.json", "*.pem" ], true);
+
+      CopyCertFiles(KeyStorePath, KeyConfigPath, tld, [ "*.pfx", "*.json", "*.pem" ], false);
 
       CertPwd = config.GetValue<string>(nameof(CertPwd));
       Notify = config.GetSection("Notify").Get<NotifyConfig>();

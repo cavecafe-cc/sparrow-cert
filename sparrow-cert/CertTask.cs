@@ -54,11 +54,11 @@ public class CertTask {
                 log.LogError("No domains found in configuration. Exiting task ...");
                 return (int) ExitCodes.InvalidConfiguration;
             }
-
             var tld = config.Domains.First();
             var staging = config.UseStaging ? ".staging" : "";
-            var certPath = Path.Combine(config.KeyConfigPath, $"{tld}{staging}-cert.pfx");
+            var certPath = Path.Combine(config.KeyStorePath, $"{tld}{staging}-cert.pfx");
             var certExists = File.Exists(certPath);
+
             X509Certificate2 x509;
             if (!certExists) {
                 log.LogInformation("No existing cert found. Generating self-signed certificate.");
