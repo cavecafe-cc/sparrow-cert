@@ -5,3 +5,4 @@
 **/*-secret.yml
 .DS_Store
 *.b64
+/sparrow-cert-DEV-*.yml
