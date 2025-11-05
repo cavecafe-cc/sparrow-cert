@@ -22,6 +22,7 @@ public class CertConfiguration {
    #region Properties
 
    public bool Enabled { get; set; } = false;
+   public string TLD { get; set; }
    public List<string> Domains { get; set; }
    public string Email { get; set; }
    public TimeSpan RenewBeforeExpiry { get; set; }
@@ -79,14 +80,14 @@ public class CertConfiguration {
       HttpPort = config.GetValue<int>(nameof(HttpPort));
       HttpsPort = config.GetValue<int>(nameof(HttpsPort));
       CertAlias = config.GetValue<string>(nameof(CertAlias));
-      var tld = CertUtil.GetDomainOrHostname(Domains.First());
-      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? tld : CertAlias;
+      TLD = config.GetValue<string>(nameof(TLD));
+      CertAlias = string.IsNullOrWhiteSpace(CertAlias) ? TLD : CertAlias;
       var relPath = config.GetValue<string>( nameof(KeyConfigPath));
       KeyConfigPath = GetOSPath(relPath);
       relPath = config.GetValue<string>(nameof(KeyStorePath));
       KeyStorePath = GetOSPath(relPath);
 
-      CopyCertFiles(KeyStorePath, KeyConfigPath, tld, [ "*.pfx", "*.json", "*.pem" ], false);
+      CopyCertFiles(KeyConfigPath, KeyStorePath,TLD, [ "*.pfx", "*.pem" ], false);
 
       CertPwd = config.GetValue<string>(nameof(CertPwd));
       Notify = config.GetSection("Notify").Get<NotifyConfig>();
@@ -138,21 +139,21 @@ public class CertConfiguration {
    }
 
    // Copy the files with the given extensions to the store path
-   private void CopyCertFiles(string keyPath, string configPath, string hostName, string[] extensions, bool backupReplace = false) {
-      if (string.IsNullOrWhiteSpace(keyPath) || !Directory.Exists(keyPath)) return;
+   private void CopyCertFiles(string srcPath, string targetPath, string hostName, string[] extensions, bool backupReplace = false) {
+      if (string.IsNullOrWhiteSpace(targetPath) || !Directory.Exists(targetPath)) return;
       foreach (var ext in extensions) {
          if (string.IsNullOrWhiteSpace(ext)) continue;
-         var dir = Path.GetDirectoryName(configPath);
+         var dir = Path.GetDirectoryName(srcPath);
          if (dir == null) continue;
          var files = Directory.GetFiles(dir, $"{hostName}{ext}");
          files.ToList().ForEach(f => {
             try {
                StringBuilder sb = new();
-               var filePath = Path.Combine(keyPath, Path.GetFileName(f));
+               var filePath = Path.Combine(targetPath, Path.GetFileName(f));
                if (File.Exists(filePath)) {
                   sb.Append($"File '{filePath}' already exists, ");
                   if (backupReplace) {
-                     var backup = Path.Combine(keyPath, $"{Path.GetFileNameWithoutExtension(f)}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(f)}");
+                     var backup = Path.Combine(targetPath, $"{Path.GetFileNameWithoutExtension(f)}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(f)}");
                      File.Move(filePath, backup);
                      sb.Append($"existing file moved to '{backup}' and ");
                      sb.Append($"will be replaced with new one.");
@@ -168,7 +169,7 @@ public class CertConfiguration {
                Log.Info(tag, sb.ToString());
             }
             catch (Exception e) {
-               Log.Catch(tag, $"Error copying file '{f}' to '{keyPath}'", e);
+               Log.Catch(tag, $"Error copying file '{f}' to '{targetPath}'", e);
             }
          });
       }

@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0.10-noble-amd64
 #FROM mcr.microsoft.com/dotnet/runtime:8.0.10-noble-amd64
-ENV ASPNET_VERSION=8.0.10
+ENV ASPNET_VERSION=8.0.21
 
 ARG BUILD_VERSION
 ARG AUTHOR

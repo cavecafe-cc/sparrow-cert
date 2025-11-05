@@ -15,12 +15,9 @@ public interface ILetsEncryptClient {
    Task<PfxCertificate> FinalizeOrder(PlacedOrder placedOrder);
 }
 
-public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : ILetsEncryptClient {
+public class LetsEncryptClient(IAcmeContext acme, CertConfiguration config) : ILetsEncryptClient {
    private const string tag = nameof(LetsEncryptClient);
-   private string CertAlias =>
-      string.IsNullOrWhiteSpace(options.CertAlias) ?
-         CertUtil.GetDomainOrHostname(options.Domains.First()) :
-         options.CertAlias;
+   private string CertAlias => string.IsNullOrWhiteSpace(config.CertAlias) ? config.TLD : config.CertAlias;
 
    public async Task<PlacedOrder> PlaceOrder(string[] domains) {
       Log.Info(tag, $"Ordering LetsEncrypt certificate for domains {string.Join(',', domains)}.");
@@ -68,8 +65,8 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : I
 
    private async Task<byte[]> AcquireCertificateBytesFromOrderAsync(IOrderContext order) {
       Log.Info(tag, nameof(AcquireCertificateBytesFromOrderAsync), "Generating key pair for certificate signing request.");
-      var keyPair = KeyFactory.NewKey(options.KeyAlgorithm);
-      var req = options.CertSigningRequest;
+      var keyPair = KeyFactory.NewKey(config.KeyAlgorithm);
+      var req = config.CertSigningRequest;
       var csrInfo = new CsrInfo {
          CountryName = req.CountryName,
          State = req.State,
@@ -82,7 +79,7 @@ public class LetsEncryptClient(IAcmeContext acme, CertConfiguration options) : I
       var certificateChain = await order.Generate(csrInfo, keyPair);
       var pfxBuilder = certificateChain.ToPfx(keyPair);
       pfxBuilder.FullChain = true;
-      var pfxBytes = pfxBuilder.Build(CertAlias, options.CertPwd);
+      var pfxBytes = pfxBuilder.Build(CertAlias, config.CertPwd);
       Log.Info(tag, $"Certificate acquired for {CertAlias}.");
       return pfxBytes;
    }

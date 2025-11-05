@@ -28,12 +28,11 @@ public class CertRunner : IHostedService {
       var config = cfg;
 
       #region check certificates
-      if (config.Domains == null || config.Domains.Count == 0) {
+      if (string.IsNullOrWhiteSpace(config.TLD) || config.Domains == null || config.Domains.Count == 0) {
          throw new InvalidConfigurationException("no domains found");
       }
 
-      var hostName = CertUtil.GetDomainOrHostname(config.Domains.First());
-      var pfx = $"{hostName}.pfx";
+      var pfx = $"{config.TLD}.pfx";
       Log.Info(tag, $"searching for '{pfx}'");
       var certPath = Path.Combine(config.KeyConfigPath, pfx);
       var certExists = File.Exists(certPath);
@@ -42,7 +41,7 @@ public class CertRunner : IHostedService {
       // if no certificate found, create a self-signed certificate
       var x509 = certExists ?
          new X509Certificate2(certPath, config.CertPwd) : 
-         CertUtil.GenerateSelfSignedCertificate(config.Domains.First());
+         CertUtil.GenerateSelfSignedCertificate(config.TLD);
 
       IsSelfSigned = !certExists;
 
@@ -75,12 +74,12 @@ public class CertRunner : IHostedService {
                config.Notify,
                config.UseStaging,
                config.KeyStorePath,
-               hostName
+               config.TLD
             );
             sevices.Configure<HostOptions>(option => {
                option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
             });
-            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath,  hostName);
+            sevices.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath,  config.TLD);
             sevices.AddSparrowCertRenewalHook(config.Notify, config.Domains);
          })
          .Configure(app =>

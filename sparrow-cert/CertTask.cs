@@ -50,19 +50,18 @@ public class CertTask {
                 return (int) ExitCodes.RenewalDisabled;
             }
 
-            if (config.Domains == null || config.Domains.Count == 0) {
+            if (string.IsNullOrWhiteSpace(config.TLD) || config.Domains == null || config.Domains.Count == 0) {
                 log.LogError("No domains found in configuration. Exiting task ...");
                 return (int) ExitCodes.InvalidConfiguration;
             }
-            var tld = config.Domains.First();
             var staging = config.UseStaging ? ".staging" : "";
-            var certPath = Path.Combine(config.KeyStorePath, $"{tld}{staging}-cert.pfx");
+            var certPath = Path.Combine(config.KeyStorePath, $"{config.TLD}{staging}-cert.pfx");
             var certExists = File.Exists(certPath);
 
             X509Certificate2 x509;
             if (!certExists) {
                 log.LogInformation("No existing cert found. Generating self-signed certificate.");
-                x509 = CertUtil.GenerateSelfSignedCertificate(tld);
+                x509 = CertUtil.GenerateSelfSignedCertificate(config.TLD);
             }
             else {
                 log.LogInformation($"Existing cert found at '{certPath}'. Loading certificate.");
@@ -127,16 +126,15 @@ public class CertTask {
                 Log.Info(tag, $"UseStaging='{config.UseStaging}'");
                 Log.Info(tag, $"cert config at '{(string.IsNullOrEmpty(config.KeyStorePath) ? Environment.CurrentDirectory : config.KeyStorePath)}'");
 
-                var domainName = config.Domains.First();
                 services.AddSparrowCert(config);
                 services.AddSparrowCertFileCertStore(
                     config.Notify,
                     config.UseStaging,
                     config.KeyStorePath,
-                    domainName
+                    config.TLD
                 );
                 services.Configure<HostOptions>(option => { option.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore; });
-                services.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath,  domainName);
+                services.AddSparrowCertFileChallengeStore(config.UseStaging, config.KeyStorePath,  config.TLD);
                 services.AddSparrowCertRenewalHook(config.Notify, config.Domains);
             })
             .Configure(app => {

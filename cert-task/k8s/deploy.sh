@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 function failed() {
     local error=${1:-Undefined error}
